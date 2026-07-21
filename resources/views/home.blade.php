@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripMate - Rekomendasi Perjalanan Wisata</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        /* Sembunyikan scrollbar untuk efek horizontal scroll yang bersih */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="{{ route('home') }}" class="text-2xl font-bold tracking-tight">
+                        <span class="text-sky-600">TripMate</span>
+                    </a>
+                </div>
+                <div class="hidden md:flex space-x-2">
+                    <a href="{{ route('home') }}" class="text-sky-600 font-medium px-4 py-2 rounded-lg bg-sky-50 transition">Home</a>
+                    <a href="{{ route('travel-plans.index') }}" class="text-gray-500 hover:text-gray-900 hover:bg-gray-100 font-medium text-sm px-4 py-2 rounded-lg transition">Rencana</a>
+                    <a href="{{ route('bookmarks.index') }}" class="text-gray-500 hover:text-gray-900 hover:bg-gray-100 font-medium text-sm px-4 py-2 rounded-lg transition">Bookmarks</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    @auth
+                        <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 hover:opacity-80 transition">
+                            @if(Auth::user()->avatar)
+                                <img src="{{ asset('storage/' . Auth::user()->avatar) }}" alt="Avatar" class="w-8 h-8 rounded-full object-cover border-2 border-sky-100">
+                            @else
+                                <div class="w-8 h-8 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-xs font-bold">
+                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                                </div>
+                            @endif
+                            <span class="text-sm font-medium text-gray-700 hidden sm:inline">{{ Auth::user()->name }}</span>
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="text-sm text-gray-700 hover:text-sky-600">Login</a>
+                        <a href="{{ route('register') }}" class="bg-sky-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-sky-600 active:scale-95 transition">Daftar</a>
+                    @endauth
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section & Search Box -->
+<section class="relative h-[650px] overflow-hidden">
+
+    <div id="hero-slider" class="absolute inset-0">
+
+        <img src="{{ asset('images/gedung-sate.jpg') }}"
+             class="hero-slide absolute inset-0 w-full h-full object-cover">
+
+        <img src="{{ asset('images/monas-jkt.jpg') }}"
+             class="hero-slide absolute inset-0 w-full h-full object-cover hidden">
+
+        <img src="{{ asset('images/kawah-putih.jpg') }}"
+             class="hero-slide absolute inset-0 w-full h-full object-cover hidden">
+
+        <img src="{{ asset('images/city_lights.jpg') }}"
+             class="hero-slide absolute inset-0 w-full h-full object-cover hidden">
+
+    </div>
+
+    <div class="absolute inset-0 bg-black/50"></div>
+
+    <div class="relative z-10 max-w-7xl mx-auto h-full px-8">
+
+    <div class="flex items-center h-full">
+
+        <div class="max-w-2xl">
+
+
+            <h1 class="text-5xl md:text-7xl font-extrabold text-white leading-tight">
+                Temukan
+                <br>
+                Petualangan
+                <br>
+                Terbaikmu
+            </h1>
+
+            <p class="mt-6 text-lg md:text-xl text-white/90 leading-relaxed">
+                Jelajahi wisata, kuliner, dan penginapan sesuai seleramu
+                dengan rekomendasi dari TripMate.
+            </p>
+
+  <div class="mt-10">
+
+    <form action="{{ route('destinasi.search') }}" method="GET">
+
+        <div class="bg-white/20 backdrop-blur-2xl rounded-3xl p-3 shadow-2xl max-w-3xl border border-white/30">
+            <div class="flex items-center gap-3">
+                <div class="pl-3 text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input
+                    type="text"
+                    name="keyword"
+                    placeholder="Cari destinasi impianmu..."
+                    class="flex-1 border-0 focus:ring-0 text-white placeholder-white/70 text-lg bg-transparent">
+                <button
+                    type="submit"
+                    class="bg-white text-sky-600 hover:bg-sky-50 px-8 py-4 rounded-2xl font-bold transition shadow-lg">
+                    Cari
+                </button>
+            </div>
+        </div>
+
+    </form>
+
+    <!-- Quick Tags -->
+    <div class="flex flex-wrap gap-3 mt-5">
+
+        <a href="{{ route('destinasi.search',['kategori'=>'Wisata Alam']) }}"
+            class="bg-white/20 backdrop-blur text-white px-4 py-2 rounded-full text-sm hover:bg-white/30">
+            Wisata Alam
+        </a>
+
+        <a href="{{ route('destinasi.search',['kategori'=>'Wisata Budaya']) }}"
+            class="bg-white/20 backdrop-blur text-white px-4 py-2 rounded-full text-sm hover:bg-white/30">
+            Budaya
+        </a>
+
+        <a href="{{ route('destinasi.search',['kategori'=>'Wisata Kuliner']) }}"
+            class="bg-white/20 backdrop-blur text-white px-4 py-2 rounded-full text-sm hover:bg-white/30">
+            Kuliner
+        </a>
+
+        <a href="{{ route('destinasi.search',['hidden_gem'=>1]) }}"
+            class="bg-white/20 backdrop-blur text-white px-4 py-2 rounded-full text-sm hover:bg-white/30">
+            Hidden Gems
+        </a>
+
+    </div>
+
+</div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    const slides = document.querySelectorAll('.hero-slide');
+    let current = 0;
+
+    setInterval(() => {
+
+        slides[current].classList.add('hidden');
+
+        current = (current + 1) % slides.length;
+
+        slides[current].classList.remove('hidden');
+
+    }, 5000);
+
+});
+</script>
+            
+
+
+    <!-- BAGIAN BARU: Rekomendasi untuk Anda (Horizontal Scroll) -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="flex items-center justify-between mb-2">
+
+    <div>
+
+        <h2 class="text-3xl font-bold text-slate-900">
+            Rekomendasi untuk Anda 
+        </h2>
+
+        <p class="text-slate-500 mt-1">
+            Destinasi pilihan yang cocok dengan preferensi Anda.
+        </p>
+
+    </div>
+
+    <a
+        href="{{ route('recommendations.index') }}"
+        class="text-sky-600 font-semibold hover:text-sky-700">
+
+        Lihat Semua →
+
+    </a>
+
+</div>
+      
+        <div class="flex space-x-5 overflow-x-auto pb-4 scrollbar-hide snap-x">
+            @foreach($recommendations as $destinasi)
+                <div class="flex-shrink-0 w-72 snap-start bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out group active:scale-[0.98]">
+                    <!-- Bagian Gambar -->
+                    <div class="h-40 w-full bg-gray-200 relative overflow-hidden">
+                        @if($destinasi->gambar)
+                            <img src="{{ $destinasi->gambar }}" alt="{{ $destinasi->nama_destinasi }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            
+                            <div class="w-full h-full items-center justify-center text-gray-400 group-hover:scale-110 transition-transform duration-500" style="display: none;">
+                                <div class="text-center">
+                                    <svg class="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    <span class="text-xs mt-2 block font-medium text-gray-400">Gambar Gagal Dimuat</span>
+                                </div>
+                            </div>
+                        @else
+                            <div class="w-full h-full flex items-center justify-center text-gray-400 group-hover:scale-110 transition-transform duration-500">
+                                <div class="text-center">
+                                    <svg class="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    <span class="text-xs mt-2 block font-medium text-gray-400">Tidak Ada Gambar</span>
+                                </div>
+                            </div>
+                        @endif
+                        
+                        @if($destinasi->hidden_gem)
+                        <span class="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full z-10">Hidden Gem 💎</span>
+                        @endif
+                    </div>
+
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-gray-900 leading-tight">{{ Str::limit($destinasi->nama_destinasi, 20) }}</h3>
+                            <span class="text-yellow-500 text-sm font-semibold flex items-center gap-1 flex-shrink-0">
+                                @if(($destinasi->ratings_count ?? 0) > 0)
+                                    ⭐ {{ number_format($destinasi->average_rating, 1) }}
+                                @else
+                                    Belum ada ulasan
+                                @endif
+                            </span>
+                        </div>
+                        <p class="text-gray-500 text-sm mb-4">📍 {{ $destinasi->kota }}</p>
+                        <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+                           @if($destinasi->harga == 0)
+
+    <span class="text-green-600 font-bold">
+        Gratis
+    </span>
+
+@else
+
+    <span class="text-sky-600 font-bold">
+        Rp {{ number_format($destinasi->harga, 0, ',', '.') }}
+    </span>
+
+@endif
+                            <a href="{{ route('destinasi.show', $destinasi->id) }}" class="text-sm text-sky-500 hover:text-sky-700 font-medium hover:underline transition">Detail →</a>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+
+
+
+
+
+</section>
+
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+    <div class="rounded-3xl bg-gradient-to-r from-sky-50 to-cyan-50 overflow-hidden shadow-lg border border-sky-100">
+
+        <div class="grid md:grid-cols-3 items-center">
+
+            <div class="p-8 flex justify-center relative">
+                <!-- Slider Container -->
+                <div class="relative w-52 h-52 rounded-2xl overflow-hidden shadow-md">
+                    
+                    <!-- Slides -->
+                    <img src="{{ asset('images/plan.jpg') }}" alt="Plan" class="slide-img absolute inset-0 w-full h-full object-cover opacity-100 transition-all duration-700 ease-in-out">
+                    <img src="{{ asset('images/solo-traveling.jpg') }}" alt="Travel 1" class="slide-img absolute inset-0 w-full h-full object-cover opacity-0 transition-all duration-700 ease-in-out">
+                    <img src="{{ asset('images/solo-travelling.jpg') }}" alt="Travel 2" class="slide-img absolute inset-0 w-full h-full object-cover opacity-0 transition-all duration-700 ease-in-out">
+                    <img src="{{ asset('images/manfaat-traveling.jpg') }}" alt="Travel 3" class="slide-img absolute inset-0 w-full h-full object-cover opacity-0 transition-all duration-700 ease-in-out">
+
+                    <!-- Gradient Overlay -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none rounded-2xl"></div>
+
+                    <!-- Dots Indicator -->
+                    <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                        <span class="slide-dot w-2 h-2 rounded-full bg-white/90 shadow transition-all duration-300"></span>
+                        <span class="slide-dot w-2 h-2 rounded-full bg-white/40 shadow transition-all duration-300"></span>
+                        <span class="slide-dot w-2 h-2 rounded-full bg-white/40 shadow transition-all duration-300"></span>
+                        <span class="slide-dot w-2 h-2 rounded-full bg-white/40 shadow transition-all duration-300"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:col-span-2 p-8">
+
+                <h2 class="text-3xl font-bold text-slate-900">
+                    Rencanakan Perjalanan Impianmu
+                </h2>
+
+                <p class="text-slate-600 mt-4 leading-relaxed max-w-2xl">
+                    Kelola itinerary, budget perjalanan, pengeluaran, dan destinasi favorit dalam satu aplikasi. TripMate membantu perjalananmu menjadi lebih terencana dan nyaman.
+                </p>
+
+                <a href="{{ route('travel-plans.index') }}" class="inline-flex items-center gap-2 mt-8 bg-sky-600 hover:bg-sky-700 text-white px-7 py-3 rounded-2xl font-semibold transition active:scale-95 shadow-lg">
+                    Mulai Rencana
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                    </svg>
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- Script Slider -->
+<script>
+(function() {
+    const images = document.querySelectorAll('.slide-img');
+    const dots = document.querySelectorAll('.slide-dot');
+    let current = 0;
+    let interval;
+
+    function goTo(index) {
+        // Fade out semua gambar
+        images.forEach((img, i) => {
+            if (i === index) {
+                img.style.opacity = '1';
+                img.style.transform = 'scale(1)';
+            } else {
+                img.style.opacity = '0';
+                img.style.transform = 'scale(1.08)';
+            }
+        });
+
+        // Update dots
+        dots.forEach((dot, i) => {
+            if (i === index) {
+                dot.classList.remove('bg-white/40');
+                dot.classList.add('bg-white/90');
+                dot.style.width = '1.25rem';
+            } else {
+                dot.classList.remove('bg-white/90');
+                dot.classList.add('bg-white/40');
+                dot.style.width = '0.5rem';
+            }
+        });
+
+        current = index;
+    }
+
+    function next() {
+        goTo((current + 1) % images.length);
+    }
+
+    function startAuto() {
+        interval = setInterval(next, 3500);
+    }
+
+    function stopAuto() {
+        clearInterval(interval);
+    }
+
+    // Klik dot untuk pindah slide
+    dots.forEach((dot, i) => {
+        dot.style.cursor = 'pointer';
+        dot.addEventListener('click', () => {
+            stopAuto();
+            goTo(i);
+            startAuto();
+        });
+    });
+
+    // Pause saat hover
+    const container = images[0]?.parentElement;
+    if (container) {
+        container.addEventListener('mouseenter', stopAuto);
+        container.addEventListener('mouseleave', startAuto);
+    }
+
+    // Mulai
+    goTo(0);
+    startAuto();
+})();
+</script>
+
+
+
+    <!-- Layout Grid: Sidebar & Destinasi Populer -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            
+<!-- SIDEBAR FILTER -->
+<aside class="hidden lg:block lg:col-span-1">
+
+    <div class="sticky top-20 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+
+        <!-- Header -->
+        <div class="px-5 py-5 bg-sky-50 border-b">
+            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">Jelajahi Destinasi</h2>
+            <p class="text-sm text-slate-500 mt-1">Temukan destinasi sesuai kebutuhan Anda.</p>
+        </div>
+
+        <form action="{{ route('home') }}" method="GET" class="divide-y divide-gray-100">
+
+            <!-- KOTA -->
+            <details class="group" open>
+                <summary class="cursor-pointer list-none flex justify-between items-center px-5 py-4 font-semibold text-gray-800">
+                    <span>Wilayah</span>
+                    <svg class="w-4 h-4 group-open:rotate-180 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </summary>
+                <div class="px-5 pb-4 space-y-2">
+                    <label class="flex items-center gap-3">
+                        <input type="checkbox" name="kota[]" value="Bandung" {{ in_array('Bandung', request('kota', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-sky-600">
+                        Bandung
+                    </label>
+                    <label class="flex items-center gap-3">
+                        <input type="checkbox" name="kota[]" value="Jakarta" {{ in_array('Jakarta', request('kota', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-sky-600">
+                        Jakarta
+                    </label>
+                </div>
+            </details>
+
+            <!-- KATEGORI -->
+            <details class="group" open>
+                <summary class="cursor-pointer list-none flex justify-between items-center px-5 py-4 font-semibold text-gray-800">
+                    <span>Kategori</span>
+                    <svg class="w-4 h-4 group-open:rotate-180 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </summary>
+                <div class="px-5 pb-4 space-y-2 max-h-72 overflow-y-auto">
+                    @foreach($kategoris as $kategori)
+                        <label class="flex items-center gap-3">
+                            <input type="checkbox" name="kategori[]" value="{{ $kategori->nama_kategori }}" {{ in_array($kategori->nama_kategori, request('kategori', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-sky-600 focus:ring-sky-500">
+                            <span>{{ $kategori->nama_kategori }}</span>
+                        </label>
+                    @endforeach
+                    <label class="flex items-center gap-3">
+                        <input type="checkbox" name="kategori[]" value="Penginapan" {{ in_array('Penginapan', request('kategori', [])) ? 'checked' : '' }} class="rounded border-gray-300 text-sky-600 focus:ring-sky-500">
+                        <span>Penginapan</span>
+                    </label>
+                </div>
+            </details>
+
+            <!-- BUDGET -->
+            <details class="group">
+                <summary class="cursor-pointer list-none flex justify-between items-center px-5 py-4 font-semibold text-gray-800">
+                    <span>Budget</span>
+                    <svg class="w-4 h-4 group-open:rotate-180 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </summary>
+                <div class="px-5 pb-4 space-y-3">
+                    <label class="flex items-center gap-3">
+                        <input type="radio" name="budget" value="Gratis" {{ request('budget') == 'Gratis' ? 'checked' : '' }} class="text-sky-600">
+                        <span>Gratis</span>
+                    </label>
+                    <label class="flex items-center gap-3">
+                        <input type="radio" name="budget" value="Murah" {{ request('budget') == 'Murah' ? 'checked' : '' }} class="text-sky-600">
+                        <span>Murah</span>
+                    </label>
+                    <label class="flex items-center gap-3">
+                        <input type="radio" name="budget" value="Sedang" {{ request('budget') == 'Sedang' ? 'checked' : '' }} class="text-sky-600">
+                        <span>Sedang</span>
+                    </label>
+                    <label class="flex items-center gap-3">
+                        <input type="radio" name="budget" value="Mahal" {{ request('budget') == 'Mahal' ? 'checked' : '' }} class="text-sky-600">
+                        <span>Mahal</span>
+                    </label>
+                </div>
+            </details>
+
+            <!-- HIDDEN GEM -->
+            <div class="px-5 py-5">
+                <label class="flex items-center gap-3">
+                    <input type="checkbox" name="hidden_gem" value="1" {{ request()->has('hidden_gem') ? 'checked' : '' }} class="rounded border-gray-300 text-sky-600">
+                    <span class="font-medium">💎 Hidden Gem</span>
+                </label>
+            </div>
+
+            <!-- BUTTON -->
+            <div class="p-5">
+                <button type="submit" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 rounded-xl transition">
+                    Terapkan Filter
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</aside>
+            <!-- KONTEN UTAMA (Destinasi) -->
+            <div class="lg:col-span-3">
+                
+                <!-- Dropdown Kategori -->
+                <div class="lg:hidden mb-6">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Pilih Kategori</label>
+                    <select onchange="if (this.value) window.location.href=this.value" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-400 font-medium">
+                        <option value="{{ route('destinasi.search') }}">Semua Kategori</option>
+                        @foreach($kategoris as $kategori)
+                            <option value="{{ route('destinasi.search', ['kategori' => $kategori->nama_kategori]) }}">{{ $kategori->nama_kategori }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Jelajahi Destinasi</h2>
+                    <a href="{{ route('destinasi.search') }}" class="text-sky-500 hover:text-sky-700 font-medium text-sm transition hidden sm:block">     Lihat Semua Destinasi →</a>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    @foreach($destinasiPopuler as $destinasi)
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-2 transition-all duration-300 ease-out group active:scale-[0.98]">
+                            <!-- Bagian Gambar dengan Logika IF -->
+                            <div class="h-48 w-full bg-gray-200 relative overflow-hidden">
+                                @if($destinasi->gambar)
+                                    <img src="{{ $destinasi->gambar }}" alt="{{ $destinasi->nama_destinasi }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    
+                                    <div class="w-full h-full items-center justify-center text-gray-400 group-hover:scale-110 transition-transform duration-500" style="display: none;">
+                                        <div class="text-center">
+                                            <svg class="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                            <span class="text-xs mt-2 block font-medium text-gray-400">Gambar Gagal Dimuat</span>
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="w-full h-full flex items-center justify-center text-gray-400 group-hover:scale-110 transition-transform duration-500">
+                                        <div class="text-center">
+                                            <svg class="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                            <span class="text-xs mt-2 block font-medium text-gray-400">Tidak Ada Gambar</span>
+                                        </div>
+                                    </div>
+                                @endif
+                                
+                                @if($destinasi->hidden_gem)
+                                <span class="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full z-10">Hidden Gem 💎</span>
+                                @endif
+                            </div>
+
+                            <div class="p-5">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="font-bold text-gray-900 leading-tight">{{ Str::limit($destinasi->nama_destinasi, 25) }}</h3>
+                                    <span class="text-yellow-500 text-sm font-semibold flex items-center gap-1">
+                                        @if(($destinasi->ratings_count ?? 0) > 0)
+                                            ⭐ {{ number_format($destinasi->average_rating, 1) }}
+                                        @else
+                                            Belum ada ulasan
+                                        @endif
+                                    </span>
+                                </div>
+                                <p class="text-gray-500 text-sm mb-4">📍 {{ $destinasi->kota }} • {{ $destinasi->kategori }}</p>
+                                <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+                                    @if($destinasi->harga == 0)
+
+    <span class="text-green-600 font-bold">
+        Gratis
+    </span>
+
+@else
+
+    <span class="text-sky-600 font-bold">
+        Rp {{ number_format($destinasi->harga, 0, ',', '.') }}
+    </span>
+
+@endif
+                                    <a href="{{ route('destinasi.show', $destinasi->id) }}" class="text-sm text-sky-500 hover:text-sky-700 font-medium hover:underline transition">Detail →</a>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </section>
+
+ <!-- Footer TripMate - Selaras dengan tema Home -->
+<footer class="bg-white border-t border-gray-100 mt-20">
+    <div class="max-w-7xl mx-auto px-6 py-16">
+
+        <div class="grid md:grid-cols-12 gap-12">
+
+            <!-- Logo & Deskripsi -->
+            <div class="md:col-span-5">
+                <h2 class="text-4xl font-bold tracking-tight text-slate-900">
+                    <span class="text-sky-600">TripMate</span>
+                </h2>
+                
+                <p class="mt-5 text-gray-500 leading-relaxed text-[15px]">
+                    Temukan destinasi wisata, kuliner, dan penginapan terbaik 
+                    yang sesuai dengan gaya dan preferensi perjalanan Anda.
+                </p>
+
+               
+
+                <!-- Social Media -->
+                <div class="mt-10">
+                    <p class="text-gray-500 text-sm mb-4">Ikuti Kami</p>
+                    <div class="flex gap-4">
+                        <a href="#" class="w-9 h-9 bg-sky-50 hover:bg-sky-500 transition-all duration-300 rounded-xl flex items-center justify-center text-sky-600 hover:text-white">
+                            <!-- Instagram -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.074 4.771 1.588 4.859 4.84.078 1.265.09 1.645.09 4.849 0 3.204-.012 3.584-.07 4.85-.074 3.252-1.588 4.771-4.84 4.859-1.265.078-1.645.09-4.849.09-3.204 0-3.584-.012-4.85-.07-3.252-.074-4.771-1.588-4.859-4.84-.078-1.265-.09-1.645-.09-4.849 0-3.204.012-3.584.07-4.85.074-3.252 1.588-4.771 4.84-4.859 1.265-.078 1.645-.09 4.849-.09z"/>
+                                <path d="M12 5.838c-3.403 0-6.162 2.759-6.162 6.162 0 3.403 2.759 6.162 6.162 6.162 3.403 0 6.162-2.759 6.162-6.162 0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.791-4-4 0-2.209 1.791-4 4-4 2.209 0 4 1.791 4 4 0 2.209-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.441 0 .796.645 1.441 1.441 1.441.796 0 1.441-.645 1.441-1.441 0-.796-.645-1.441-1.441-1.441z"/>
+                            </svg>
+                        </a>
+                        
+                        <a href="#" class="w-9 h-9 bg-sky-50 hover:bg-sky-500 transition-all duration-300 rounded-xl flex items-center justify-center text-sky-600 hover:text-white">
+                            <!-- Twitter/X -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M18.244 2.25l-.01 3.75h-3.75v3.75h3.75v3.75h-3.75v3.75h-3.75V13.5H6.244v-3.75H2.494V6H6.244V2.25h3.75v3.75h3.75V2.25z"/>
+                            </svg>
+                        </a>
+                        
+                        <a href="#" class="w-9 h-9 bg-sky-50 hover:bg-sky-500 transition-all duration-300 rounded-xl flex items-center justify-center text-sky-600 hover:text-white">
+                            <!-- Facebook -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.9-4.27 4.25 0 .33.04.66.11.97-3.55-.18-6.7-1.88-8.81-4.47-.37.63-.58 1.37-.58 2.15 0 1.48.75 2.79 1.9 3.56-.7-.02-1.36-.21-1.94-.53v.05c0 2.06 1.46 3.78 3.4 4.17-.36.1-.73.15-1.11.15-.27 0-.53-.03-.79-.08.53 1.66 2.07 2.87 3.9 2.9-1.46 1.14-3.3 1.82-5.3 1.82-.34 0-.68-.02-1.01-.06 1.88 1.21 4.1 1.91 6.5 1.91 7.8 0 12.06-6.46 12.06-12.06 0-.18 0-.36-.01-.54.83-.6 1.55-1.35 2.12-2.2z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menu -->
+            <div class="md:col-span-3">
+                <h3 class="font-semibold text-lg mb-5 text-slate-900">
+                    Jelajahi
+                </h3>
+                <ul class="space-y-3 text-gray-500">
+                    <li><a href="{{ route('home') }}" class="hover:text-sky-600 transition-all duration-200">Home</a></li>
+                    <li><a href="{{ route('travel-plans.index') }}" class="hover:text-sky-600 transition-all duration-200">Rencana Perjalanan</a></li>
+                    <li><a href="{{ route('bookmarks.index') }}" class="hover:text-sky-600 transition-all duration-200">Bookmarks</a></li>
+                    <li><a href="{{ route('preference.create') }}" class="hover:text-sky-600 transition-all duration-200">Preferensi</a></li>
+                </ul>
+            </div>
+
+            <!-- Tentang -->
+            <div class="md:col-span-4">
+                <h3 class="font-semibold text-lg mb-5 text-slate-900">
+                    Tentang TripMate
+                </h3>
+                <p class="text-gray-500 leading-relaxed text-[15px]">
+                    Platform perjalanan yang membantu Anda 
+                    menemukan pengalaman liburan paling sesuai dengan minat dan kebutuhan Anda.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="border-t border-gray-100 mt-16 pt-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
+                <p class="text-gray-400">
+                    © {{ date('Y') }} TripMate. All rights reserved.
+                </p>
+                
+                <div class="flex items-center gap-6 text-gray-400">
+                    <a href="#" class="hover:text-sky-600 transition-colors">Privacy</a>
+                    <a href="#" class="hover:text-sky-600 transition-colors">Terms</a>
+                    <a href="#" class="hover:text-sky-600 transition-colors">Contact</a>
+                </div>
+
+                <p class="text-gray-400">
+                    Developed by <span class="text-sky-600 font-medium">Muhammad Diaz</span>
+                </p>
+            </div>
+        </div>
+
+    </div>
+</footer>
+
+
+</body>
+</html>
