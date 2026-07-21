@@ -1,0 +1,145 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Services\BudgetRecommendationService;
+use App\Services\DijkstraService;
+use App\Models\TravelPlan;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
+class BudgetController extends Controller
+{
+    protected BudgetRecommendationService $budgetService;
+    protected DijkstraService $dijkstraService;
+
+    public function __construct(
+        BudgetRecommendationService $budgetService,
+        DijkstraService $dijkstraService
+    ) {
+        $this->budgetService   = $budgetService;
+        $this->dijkstraService = $dijkstraService;
+    }
+
+    /**
+     * Rekomendasi destinasi berdasarkan budget.
+     */
+    public function recommend(Request $request)
+    {
+        $request->validate([
+            'budget'   => 'required|numeric|min:0',
+            'kategori' => 'nullable|string',
+        ]);
+
+        $data = $this->budgetService->recommend(
+            $request->budget,
+            $request->kategori
+        );
+
+        return response()->json([
+            'status'          => 'success',
+            'recommendations' => $data['recommendations'],
+            'total_cost'      => $data['total_cost'],
+        ]);
+    }
+
+    /**
+     * Hitung rute terintegrasi berdasarkan budget dan titik awal–akhir.
+     */
+    public function getIntegratedRoute(Request $request)
+    {
+        $request->validate([
+            'start'  => 'required|string',
+            'end'    => 'required|string',
+            'budget' => 'required|numeric',
+        ]);
+
+        // 1. Dapatkan kandidat destinasi dalam budget
+        $data         = $this->budgetService->recommend($request->budget, null);
+        $destinations = $data['recommendations'];
+
+        // 2. Hitung rute waypoint berdasarkan koridor geografis
+        $rawRoute = $this->dijkstraService->calculateRoute(
+            $request->start,
+            $request->end,
+            $destinations
+        );
+
+        if (is_array($rawRoute) && isset($rawRoute['error'])) {
+            return response()->json(['message' => $rawRoute['error']], 404);
+        }
+
+        // 3. Pembatasan budget: akumulasikan biaya per destinasi
+        $finalRoute      = [];
+        $accumulatedCost = 0;
+        $maxBudget       = (float) $request->budget;
+
+        foreach ($rawRoute as $index => $place) {
+            $cost = (float) ($place->harga ?? 0);
+
+            // Titik awal dan akhir selalu dimasukkan
+            if ($index === 0 || $index === (count($rawRoute) - 1)) {
+                $accumulatedCost += $cost;
+                $finalRoute[] = $place;
+                continue;
+            }
+
+            if (($accumulatedCost + $cost) <= $maxBudget) {
+                $accumulatedCost += $cost;
+                $finalRoute[] = $place;
+            }
+        }
+
+        return response()->json([
+            'route'      => $finalRoute,
+            'total_cost' => $accumulatedCost,
+        ]);
+    }
+
+    /**
+     * Simpan hasil rute ke Travel Plan.
+     */
+    public function saveToPlan(Request $request)
+    {
+        $request->validate([
+            'nama_perjalanan' => 'required|string',
+            'budget'          => 'required|numeric',
+            'total_cost'      => 'required|numeric',
+            'destinasi_ids'   => 'required|array',
+            'destinasi_ids.*' => 'exists:destinasi,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            /** @var \App\Models\TravelPlan $plan */
+            $plan = $request->user()->travelPlans()->create([
+                'nama_perjalanan' => $request->nama_perjalanan,
+                'budget'          => $request->budget,
+                'status'          => 'planning',
+            ]);
+
+            foreach ($request->destinasi_ids as $destinasiId) {
+                $plan->destinasis()->attach($destinasiId);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Rencana perjalanan berhasil disimpan!',
+                'plan'    => $plan->load('destinasis'),
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Gagal menyimpan plan: ' . $e->getMessage());
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Gagal menyimpan rencana perjalanan.',
+            ], 500);
+        }
+    }
+}
