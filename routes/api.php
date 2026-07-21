@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\TravelPlanController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\BudgetController;
 use App\Http\Controllers\Api\RecommendationController;
+use App\Http\Controllers\Api\RouteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,6 +29,9 @@ Route::get('destinasi/{id}', [DestinasiController::class, 'show']);
 // Algoritma budget (public)
 Route::post('budget-recommendation', [BudgetController::class, 'recommend']);
 Route::post('integrated-route',      [BudgetController::class, 'getIntegratedRoute']);
+
+// Algoritma Dijkstra / Nearest-Neighbor (public)
+Route::get('dijkstra/{start}/{end}', [RouteController::class, 'show']);
 
 // Health check
 Route::get('test', fn () => response()->json(['message' => 'API TripMate OK']));

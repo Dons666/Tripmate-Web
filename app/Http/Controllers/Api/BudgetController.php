@@ -24,40 +24,57 @@ class BudgetController extends Controller
     }
 
     /**
-     * Rekomendasi destinasi berdasarkan budget.
+     * Rekomendasi destinasi berdasarkan budget, kategori, dan kota.
+     *
+     * POST /api/budget-recommendation
+     * Body: { budget: float, kategori?: string, kota?: string }
      */
     public function recommend(Request $request)
     {
         $request->validate([
             'budget'   => 'required|numeric|min:0',
-            'kategori' => 'nullable|string',
+            'kategori' => 'nullable|string|max:100',
+            'kota'     => 'nullable|string|max:100',
         ]);
 
         $data = $this->budgetService->recommend(
             $request->budget,
-            $request->kategori
+            $request->kategori,
+            $request->kota,
         );
 
         return response()->json([
-            'status'          => 'success',
-            'recommendations' => $data['recommendations'],
-            'total_cost'      => $data['total_cost'],
+            'status'           => 'success',
+            'recommendations'  => $data['recommendations'],
+            'total_cost'       => $data['total_cost'],
+            'remaining_budget' => $data['remaining_budget'],
+            'count'            => $data['count'],
+            'budget_max'       => $data['budget_max'],
         ]);
     }
 
     /**
      * Hitung rute terintegrasi berdasarkan budget dan titik awal–akhir.
+     *
+     * POST /api/integrated-route
+     * Body: { start: string, end: string, budget: float, kategori?: string, kota?: string }
      */
     public function getIntegratedRoute(Request $request)
     {
         $request->validate([
-            'start'  => 'required|string',
-            'end'    => 'required|string',
-            'budget' => 'required|numeric',
+            'start'    => 'required|string',
+            'end'      => 'required|string',
+            'budget'   => 'required|numeric',
+            'kategori' => 'nullable|string',
+            'kota'     => 'nullable|string',
         ]);
 
         // 1. Dapatkan kandidat destinasi dalam budget
-        $data         = $this->budgetService->recommend($request->budget, null);
+        $data         = $this->budgetService->recommend(
+            $request->budget,
+            $request->kategori,
+            $request->kota,
+        );
         $destinations = $data['recommendations'];
 
         // 2. Hitung rute waypoint berdasarkan koridor geografis
@@ -92,22 +109,39 @@ class BudgetController extends Controller
             }
         }
 
+        $formatted = collect($finalRoute)->map(fn ($d) => [
+            'id'             => $d->id,
+            'nama_destinasi' => $d->nama_destinasi,
+            'kategori'       => $d->kategori,
+            'kota'           => $d->kota,
+            'harga'          => (float) $d->harga,
+            'latitude'       => (float) $d->latitude,
+            'longitude'      => (float) $d->longitude,
+            'gambar'         => $d->image_url,
+        ]);
+
         return response()->json([
-            'route'      => $finalRoute,
-            'total_cost' => $accumulatedCost,
+            'status'           => 'success',
+            'route'            => $formatted,
+            'total_cost'       => $accumulatedCost,
+            'remaining_budget' => max(0.0, $maxBudget - $accumulatedCost),
+            'total_nodes'      => $formatted->count(),
         ]);
     }
 
     /**
      * Simpan hasil rute ke Travel Plan.
+     *
+     * POST /api/save-trip-plan  (auth:sanctum)
+     * Body: { nama_perjalanan: string, budget: float, total_cost: float, destinasi_ids: int[] }
      */
     public function saveToPlan(Request $request)
     {
         $request->validate([
-            'nama_perjalanan' => 'required|string',
+            'nama_perjalanan' => 'required|string|max:255',
             'budget'          => 'required|numeric',
             'total_cost'      => 'required|numeric',
-            'destinasi_ids'   => 'required|array',
+            'destinasi_ids'   => 'required|array|min:1',
             'destinasi_ids.*' => 'exists:destinasi,id',
         ]);
 
