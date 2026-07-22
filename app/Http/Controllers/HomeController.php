@@ -22,6 +22,24 @@ class HomeController extends Controller
     {
         // Ambil kategori
         $kategoris = Kategori::all();
+
+        /*
+        |--------------------------------------------------------------------------
+        | RUMUS BAYESIAN AVERAGE: 3 Tempat Terbaik
+        | Rumus: (C * m + S * r) / (C + S)
+        | - m: Global Average Rating seluruh destinasi ($globalAverage)
+        | - C: Confidence threshold / Bobot (misal 50)
+        | - S: Jumlah ulasan destinasi ($itemVotes)
+        | - r: Average rating destinasi ($itemRating)
+        |--------------------------------------------------------------------------
+        */
+        $top3Bayesian = Destinasi::query()
+            ->withAvg('ratings', 'skor_rating')
+            ->withCount('ratings')
+            ->orderByDesc('rating_destinasi') // hasil perhitungan Bayesian Average
+            ->take(3)
+            ->get();
+
 /*
 |--------------------------------------------------------------------------
 | Destinasi Populer
@@ -214,7 +232,8 @@ $destinasiPopuler = $query
             compact(
                 'kategoris',
                 'destinasiPopuler',
-                'recommendations'
+                'recommendations',
+                'top3Bayesian'
             )
         );
     }

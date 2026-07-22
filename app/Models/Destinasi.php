@@ -239,31 +239,47 @@ class Destinasi extends Model
 
     public function getOperationalScheduleAttribute(): array
     {
-        if (empty($this->hari_operasional)) {
-            return [];
-        }
-
         $schedule = [];
 
-        foreach (explode(';', (string) $this->hari_operasional) as $segment) {
-            if (!str_contains($segment, ':')) {
-                continue;
-            }
+        if (!empty($this->hari_operasional) && str_contains($this->hari_operasional, ':')) {
+            foreach (explode(';', (string) $this->hari_operasional) as $segment) {
+                if (!str_contains($segment, ':')) {
+                    continue;
+                }
 
-            [$day, $value] = explode(':', $segment, 2);
+                [$day, $value] = explode(':', $segment, 2);
 
-            if ($value === 'closed') {
+                if ($value === 'closed') {
+                    $schedule[$day] = [
+                        'status' => 'closed',
+                        'open_time' => '',
+                        'close_time' => '',
+                    ];
+                    continue;
+                }
+
+                [$openTime, $closeTime] = array_pad(explode('-', $value, 2), 2, '');
                 $schedule[$day] = [
-                    'status' => 'closed',
-                    'open_time' => '',
-                    'close_time' => '',
+                    'status' => 'open',
+                    'open_time' => $openTime,
+                    'close_time' => $closeTime,
                 ];
-                continue;
             }
 
-            [$openTime, $closeTime] = array_pad(explode('-', $value, 2), 2, '');
+            if (!empty($schedule)) {
+                return $schedule;
+            }
+        }
+
+        // Fallback jika jam_buka / jam_tutup berupa string terpisah (misal: "06:00", "22:00")
+        $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        $openTime = $this->jam_buka ?: '';
+        $closeTime = $this->jam_tutup ?: '';
+        $hasTime = !empty($openTime) || !empty($closeTime);
+
+        foreach ($days as $day) {
             $schedule[$day] = [
-                'status' => 'open',
+                'status' => $hasTime ? 'open' : 'closed',
                 'open_time' => $openTime,
                 'close_time' => $closeTime,
             ];

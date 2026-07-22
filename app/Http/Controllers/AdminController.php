@@ -5,12 +5,23 @@ namespace App\Http\Controllers;
 use App\Models\Destinasi;
 use App\Models\Rating;
 use App\Models\User;
+use App\Models\Appeal;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
+/**
+ * Controller Khusus Admin Panel
+ * --------------------------------------------------------------------------
+ * Mengelola seluruh fungsi manajemen admin, mencakup:
+ * 1. Dashboard Statistik & Notifikasi Pengajuan Banding Akun
+ * 2. CRUD Tempat (Wisata, Kuliner, Penginapan)
+ * 3. Moderasi Komentar & Pengiriman Teguran Member
+ * 4. Pengelolaan Akun Member & Penonaktifan Akun (dengan alasan)
+ * 5. Persetujuan & Penolakan Pengajuan Banding Akun
+ */
 class AdminController extends Controller
 {
     private const DEACTIVATION_REASONS = [
@@ -20,6 +31,10 @@ class AdminController extends Controller
         'other' => 'Lainnya',
     ];
 
+    /**
+     * Halaman Dashboard Utama Admin
+     * Menampilkan statistik total data dan kotak notifikasi pengajuan banding.
+     */
     public function dashboard()
     {
         $destinationCount = Destinasi::where('tipe', 'wisata')->count();
@@ -45,14 +60,33 @@ class AdminController extends Controller
                 ];
             });
 
+        // Ambil data pengajuan banding akun dari pengguna
+        $appeals = Appeal::with('user')->latest()->get();
+
+        $notifications = $appeals->map(function (Appeal $appeal) {
+            return [
+                'id' => $appeal->id,
+                'title' => 'Pengajuan Banding Akun',
+                'user_name' => $appeal->user?->name ?? $appeal->email,
+                'user_email' => $appeal->email,
+                'reason' => $appeal->reason,
+                'status' => $appeal->status,
+                'is_unread' => !$appeal->is_read,
+                'time' => $appeal->created_at?->diffForHumans() ?? '-',
+                'message' => 'Member (' . $appeal->email . ') mengajukan banding: "' . $appeal->reason . '"',
+            ];
+        });
+
+        $unreadNotificationCount = Appeal::where('is_read', false)->count();
+
         return view('admin.adminDashboard', [
             'destinationCount' => $destinationCount,
             'culinaryCount' => $culinaryCount,
             'stayCount' => $stayCount,
             'commentCount' => $commentCount,
             'topPlaces' => $topPlaces,
-            'notifications' => collect(),
-            'unreadNotificationCount' => 0,
+            'notifications' => $notifications,
+            'unreadNotificationCount' => $unreadNotificationCount,
         ]);
     }
 
@@ -363,9 +397,65 @@ class AdminController extends Controller
         ]);
     }
 
+    public function appealsIndex(Request $request)
+    {
+        $query = Appeal::with('user')->latest();
+
+        if ($request->filled('status') && in_array($request->status, ['pending', 'approved', 'rejected'])) {
+            $query->where('status', $request->status);
+        }
+
+        $appeals = $query->paginate(10)->withQueryString();
+
+        $pendingCount = Appeal::where('status', 'pending')->count();
+        $approvedCount = Appeal::where('status', 'approved')->count();
+        $rejectedCount = Appeal::where('status', 'rejected')->count();
+        $totalCount = Appeal::count();
+
+        // Mark visible unread appeals as read
+        Appeal::where('is_read', false)->update(['is_read' => true]);
+
+        return view('admin.appeals.index', compact(
+            'appeals',
+            'pendingCount',
+            'approvedCount',
+            'rejectedCount',
+            'totalCount'
+        ));
+    }
+
+    public function approveAppeal(Appeal $appeal): RedirectResponse
+    {
+        $user = $appeal->user;
+
+        if ($user) {
+            $user->is_active = true;
+            $user->deactivation_reason_code = null;
+            $user->deactivation_reason_detail = null;
+            $user->save();
+        }
+
+        $appeal->status = 'approved';
+        $appeal->is_read = true;
+        $appeal->save();
+
+        return back()->with('success', 'Pengajuan banding disetujui. Akun pengguna (' . ($user?->email ?? $appeal->email) . ') telah diaktifkan kembali.');
+    }
+
+    public function rejectAppeal(Appeal $appeal): RedirectResponse
+    {
+        $appeal->status = 'rejected';
+        $appeal->is_read = true;
+        $appeal->save();
+
+        return back()->with('success', 'Pengajuan banding telah ditolak.');
+    }
+
     public function markAllNotificationsRead(): RedirectResponse
     {
-        return back()->with('success', 'Notifikasi ditandai sudah dibaca.');
+        Appeal::where('is_read', false)->update(['is_read' => true]);
+
+        return back()->with('success', 'Semua notifikasi pengajuan banding ditandai sudah dibaca.');
     }
 
     private function queryByType(string $type)
