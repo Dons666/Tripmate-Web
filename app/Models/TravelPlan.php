@@ -44,4 +44,9 @@ class TravelPlan extends Model
     {
         return $this->hasMany(Expense::class);
     }
-}
+
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class)->orderBy('tanggal')->orderBy('jam_mulai');
+    }
+}
