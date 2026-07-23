@@ -41,6 +41,98 @@
             </div>
             @endif
 
+            <!-- TRAVEL AGENT & ESCROW STATUS CARD -->
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sm:p-8 space-y-6">
+                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-6">
+                    <div>
+                        <span class="text-xs uppercase font-extrabold tracking-widest text-slate-400">Mode Perjalanan</span>
+                        <h3 class="text-xl font-extrabold text-slate-900 mt-0.5">
+                            @if($travelPlan->travel)
+                                🚌 Didampingi Agen Travel: <span class="text-sky-600">{{ $travelPlan->travel->nama_travel }}</span>
+                            @else
+                                🚶 Perencanaan Mandiri (Tanpa Travel)
+                            @endif
+                        </h3>
+                    </div>
+
+                    <!-- ACTION BUTTONS -->
+                    <div>
+                        @if($travelPlan->travel)
+                            @if(!$travelPlan->is_checkout)
+                                <a href="{{ route('travel-plans.checkout', $travelPlan) }}" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-2xl shadow-lg transition flex items-center gap-2">
+                                    🛒 Checkout & Bayar Paket Travel (Rp {{ number_format($travelPlan->travel->harga_paket, 0, ',', '.') }})
+                                </a>
+                            @else
+                                <span class="px-4 py-2 bg-emerald-100 text-emerald-800 rounded-xl text-xs font-extrabold inline-flex items-center gap-1.5">
+                                    ✓ Checkout Pembayaran Berhasil (Status Escrow Active)
+                                </span>
+                            @endif
+                        @else
+                            <span class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5">
+                                ℹ️ Perencanaan Mandiri (Tanpa Pembayaran)
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- DETAILED ESCROW & TRIP STATUS BANNER -->
+                @if($travelPlan->travel && $travelPlan->is_checkout)
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 rounded-2xl bg-gradient-to-r from-sky-50 to-indigo-50 border border-sky-100">
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Status Rekening Bersama (Escrow)</p>
+                            @if($travelPlan->payment_status === 'escrow_held')
+                                <p class="text-sm font-extrabold text-emerald-700 mt-1 flex items-center gap-1.5">
+                                    🔒 Uang Disimpan Aman oleh Admin (Escrow)
+                                </p>
+                                <p class="text-xs text-slate-500 mt-0.5">Dana di-holding Admin dan baru diteruskan ke Travel saat tur selesai.</p>
+                            @elseif($travelPlan->payment_status === 'payout_released')
+                                <p class="text-sm font-extrabold text-indigo-700 mt-1 flex items-center gap-1.5">
+                                    💸 Uang Telah Diteruskan Admin ke Agen Travel
+                                </p>
+                                <p class="text-xs text-slate-500 mt-0.5">Transaksi tur perjalanan selesai sepenuhnya!</p>
+                            @endif
+                        </div>
+
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Status Keberangkatan Tur</p>
+                            @if($travelPlan->trip_status === 'in_progress')
+                                <p class="text-sm font-extrabold text-sky-700 mt-1 flex items-center gap-1.5 animate-pulse">
+                                    🚀 Perjalanan Sedang Berjalan (Didampingi Travel)
+                                </p>
+                                <p class="text-xs text-slate-500 mt-0.5">Pihak Agen Travel telah secara resmi memulai tur hari ini.</p>
+                            @elseif($travelPlan->trip_status === 'completed')
+                                <p class="text-sm font-extrabold text-emerald-700 mt-1 flex items-center gap-1.5">
+                                    🏁 Perjalanan Berakhir (Tur Selesai)
+                                </p>
+                                <p class="text-xs text-slate-500 mt-0.5">Agen Travel telah menyelesaikan tur. Menunggu verifikasi pencairan dana Admin.</p>
+                            @else
+                                <p class="text-sm font-extrabold text-amber-700 mt-1 flex items-center gap-1.5">
+                                    ⏳ Menunggu Keberangkatan Tur
+                                </p>
+                                <p class="text-xs text-slate-500 mt-0.5">Tur akan dimulai oleh Travel pada tanggal {{ $travelPlan->tanggal_mulai ? $travelPlan->tanggal_mulai->format('d M Y') : 'keberangkatan' }}.</p>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
+                <!-- GANTI AGEN TRAVEL FORM -->
+                <form action="{{ route('travel-plans.attach-travel', $travelPlan) }}" method="POST" class="flex flex-wrap items-center gap-3 pt-2">
+                    @csrf
+                    <label class="text-xs font-bold text-slate-600">Pilih Agen Travel:</label>
+                    <select name="travel_id" class="text-xs rounded-xl border-slate-300 py-2 px-3 focus:ring-sky-500 focus:border-sky-500">
+                        <option value="">-- Perencanaan Mandiri (Tanpa Travel) --</option>
+                        @foreach($travels as $t)
+                            <option value="{{ $t->id }}" {{ $travelPlan->travel_id == $t->id ? 'selected' : '' }}>
+                                🚌 {{ $t->nama_travel }} (Rp {{ number_format($t->harga_paket, 0, ',', '.') }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition">
+                        Simpan Mode Perjalanan
+                    </button>
+                </form>
+            </div>
+
             <!-- Info Rencana & Budget -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">

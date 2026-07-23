@@ -15,10 +15,28 @@ class TravelDashboardController extends Controller
     {
         $user = Auth::user();
         
-        // Cari data penyedia travel berdasarkan email user yang login
+        // Khusus Penyedia Travel (role = 'travel') dan Admin
+        if ($user->role !== 'travel' && $user->role !== 'admin') {
+            return redirect()->route('home')
+                ->with('error', 'Akses ditolak. Dashboard ini khusus untuk Mitra Penyedia Travel.');
+        }
+
+        // Cari data penyedia travel khusus milik akun yang sedang login
         $penyediaTravel = PenyediaTravel::where('email', $user->email)->first();
 
-        return view('travel.dashboard', compact('user', 'penyediaTravel'));
+        // Cari entity Travel yang terhubung ke user ID ini
+        $travel = \App\Models\Travel::where('user_id', $user->id)->first();
+
+        if (!$travel && $penyediaTravel) {
+            $travel = \App\Models\Travel::where('nama_travel', $penyediaTravel->nama_travel)->first();
+        }
+
+        $bookings = \App\Models\TravelPlan::where('travel_id', $travel->id ?? 0)
+            ->with(['user', 'destinasis', 'schedules'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('travel.dashboard', compact('user', 'penyediaTravel', 'travel', 'bookings'));
     }
 
     /**
@@ -27,6 +45,12 @@ class TravelDashboardController extends Controller
     public function edit()
     {
         $user = Auth::user();
+
+        if ($user->role !== 'travel' && $user->role !== 'admin') {
+            return redirect()->route('home')
+                ->with('error', 'Akses ditolak. Halaman ini khusus Mitra Penyedia Travel.');
+        }
+
         $penyediaTravel = PenyediaTravel::where('email', $user->email)->firstOrFail();
 
         return view('travel.edit', compact('user', 'penyediaTravel'));
@@ -38,6 +62,12 @@ class TravelDashboardController extends Controller
     public function update(Request $request)
     {
         $user = Auth::user();
+
+        if ($user->role !== 'travel' && $user->role !== 'admin') {
+            return redirect()->route('home')
+                ->with('error', 'Akses ditolak. Akses ini khusus Mitra Penyedia Travel.');
+        }
+
         $penyediaTravel = PenyediaTravel::where('email', $user->email)->firstOrFail();
 
         $validated = $request->validate([

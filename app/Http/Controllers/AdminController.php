@@ -7,6 +7,10 @@ use App\Models\Rating;
 use App\Models\User;
 use App\Models\Appeal;
 use App\Models\PenyediaTravel;
+use App\Models\Travel;
+use App\Models\TravelPlan;
+use App\Models\UserNotification;
+use Illuminate\Support\Str;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -785,7 +789,7 @@ class AdminController extends Controller
         $penyediaTravel->update(['status' => 'approved']);
 
         if ($penyediaTravel->email) {
-            User::updateOrCreate(
+            $user = User::updateOrCreate(
                 ['email' => $penyediaTravel->email],
                 [
                     'name' => $penyediaTravel->nama_travel,
@@ -794,9 +798,25 @@ class AdminController extends Controller
                     'is_active' => true,
                 ]
             );
+
+            // Create or update the Travel package data
+            Travel::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'nama_travel' => $penyediaTravel->nama_travel,
+                    'slug' => Str::slug($penyediaTravel->nama_travel),
+                    'layanan' => $penyediaTravel->jenis_kendaraan ?? 'Paket Tur Dasar',
+                    'deskripsi' => $penyediaTravel->alamat_travel . ' - ' . $penyediaTravel->jadwal_ketersediaan,
+                    'harga_paket' => $penyediaTravel->harga ?? 100000,
+                    'kota' => $penyediaTravel->kota_asal_travel ?? 'Belum Ditentukan',
+                    'kontak' => $penyediaTravel->nomor_hp_pemilik_travel ?? '-',
+                    'gambar' => 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80',
+                    'rating' => 5.0
+                ]
+            );
         }
 
-        return redirect()->route('admin.penyedia-travel.index')->with('success', "Penyedia travel '{$penyediaTravel->nama_travel}' telah disetujui (ACC) dan akunnya diaktifkan!");
+        return redirect()->route('admin.penyedia-travel.index')->with('success', "Penyedia travel '{$penyediaTravel->nama_travel}' telah disetujui (ACC) dan berhasil ditambahkan ke daftar paket travel!");
     }
 
     /**
@@ -905,5 +925,124 @@ class AdminController extends Controller
         }
 
         return response($path, 200)->header('Content-Type', 'text/plain');
+    }
+
+    public function escrowProof(TravelPlan $travelPlan)
+    {
+        $path = $travelPlan->payment_proof;
+
+        if (!$path) {
+            abort(404, 'Bukti pembayaran tidak ditemukan.');
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            return Storage::disk('public')->response($path);
+        }
+
+        $fullPath = storage_path('app/public/' . $path);
+        if (file_exists($fullPath)) {
+            return response()->file($fullPath);
+        }
+
+        abort(404, 'File bukti pembayaran hilang atau rusak.');
+    }
+
+    /**
+     * Dashboard Escrow Admin: Pantau Dana Holding Pembayaran Paket Travel
+     */
+    public function escrowDashboard()
+    {
+        $escrowPlans = TravelPlan::whereNotNull('travel_id')
+            ->where('is_checkout', true)
+            ->with(['user', 'travel', 'destinasis'])
+            ->orderByDesc('updated_at')
+            ->get();
+
+        $totalHolding = $escrowPlans->where('payment_status', 'escrow_held')->sum(function ($p) {
+            return $p->travel->harga_paket ?? 0;
+        });
+
+        $totalReleased = $escrowPlans->where('payment_status', 'payout_released')->sum(function ($p) {
+            return $p->travel->harga_paket ?? 0;
+        });
+
+        return view('admin.escrow.index', compact('escrowPlans', 'totalHolding', 'totalReleased'));
+    }
+
+    /**
+     * Verifikasi Bukti Pembayaran dari User
+     */
+    public function verifyPayment(TravelPlan $travelPlan)
+    {
+        $travelPlan->load('travel');
+
+        if ($travelPlan->payment_status !== 'pending_admin') {
+            return back()->with('error', 'Status pembayaran tidak valid untuk diverifikasi.');
+        }
+
+        $travelPlan->update([
+            'payment_status' => 'escrow_held',
+            'trip_status'    => 'ready',
+            'status'         => 'Sedang Berjalan',
+        ]);
+
+        // 1. Notifikasi ke User Pemesan bahwa pembayaran valid
+        UserNotification::sendNotification(
+            $travelPlan->user_id,
+            '✅ Pembayaran Berhasil Diverifikasi!',
+            'Bukti pembayaran paket travel "' . ($travelPlan->travel->nama_travel ?? 'Travel') . '" sebesar Rp ' . number_format($travelPlan->travel->harga_paket ?? 0, 0, ',', '.') . ' telah diverifikasi. Dana Anda kini disimpan aman oleh Admin (Escrow) hingga trip selesai.',
+            'success'
+        );
+
+        // 2. Notifikasi ke Agen Travel bahwa ada pemesanan baru yang valid
+        if ($travelPlan->travel && $travelPlan->travel->user_id) {
+            UserNotification::sendNotification(
+                $travelPlan->travel->user_id,
+                '📅 Pemesanan Tur Baru (Lunas)!',
+                'User telah melunasi paket tur "' . $travelPlan->nama_perjalanan . '" untuk tanggal ' . ($travelPlan->tanggal_mulai ? $travelPlan->tanggal_mulai->format('d M Y') : 'jadwal terpilih') . '. Uang disimpan Admin, silakan mulai persiapan.',
+                'info'
+            );
+        }
+
+        return back()->with('success', 'Bukti pembayaran berhasil diverifikasi! Dana masuk ke status Escrow.');
+    }
+
+    /**
+     * Admin Transfer Uang Escrow ke Agen Travel setelah tur selesai
+     */
+    public function releasePayout(TravelPlan $travelPlan)
+    {
+        $travelPlan->load('travel');
+
+        if (!$travelPlan->travel) {
+            return back()->with('error', 'Travel Plan tidak memiliki data Agen Travel.');
+        }
+
+        $travelPlan->update([
+            'payment_status'     => 'payout_released',
+            'payout_released_at' => now(),
+        ]);
+
+        $amount = number_format($travelPlan->travel->harga_paket ?? 0, 0, ',', '.');
+
+        // Notifikasi ke Agen Travel
+        if ($travelPlan->travel->user_id) {
+            UserNotification::sendNotification(
+                $travelPlan->travel->user_id,
+                '💸 Pencairan Dana Escrow Berhasil!',
+                'Admin telah secara resmi mentransfer dana sebesar Rp ' . $amount . ' ke rekening Agen Travel Anda untuk pesanan "' . $travelPlan->nama_perjalanan . '". Terima kasih atas pelayanan terbaik Anda!',
+                'success'
+            );
+        }
+
+        // Notifikasi ke User
+        UserNotification::sendNotification(
+            $travelPlan->user_id,
+            '✅ Transaksi Perjalanan Selesai Sepenuhnya',
+            'Seluruh proses perjalanan tur Anda bersama "' . ($travelPlan->travel->nama_travel ?? 'Travel') . '" telah selesai dan dana telah resmi disalurkan oleh Admin.',
+            'info'
+        );
+
+        return back()->with('success', 'Dana Escrow sebesar Rp ' . $amount . ' berhasil disalurkan dari Admin ke Agen Travel!');
     }
 }

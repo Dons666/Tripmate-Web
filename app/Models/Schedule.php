@@ -4,24 +4,29 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Expense extends Model
+class Schedule extends Model
 {
     protected $fillable = [
-        'user_id',
         'travel_plan_id',
-        'nama_pengeluaran',
-        'jumlah',
+        'destinasi_id',
+        'judul',
+        'deskripsi',
         'tanggal',
-        'kategori',
+        'jam_mulai',
+        'jam_selesai',
     ];
 
     protected $casts = [
-        'tanggal' => 'date',    // <-- INI YANG PENTING
-        'jumlah'  => 'decimal:2',
+        'tanggal' => 'date',
     ];
 
     public function travelPlan()
     {
         return $this->belongsTo(TravelPlan::class);
+    }
+
+    public function destinasi()
+    {
+        return $this->belongsTo(Destinasi::class);
     }
 }

@@ -9,6 +9,7 @@ use App\Http\Controllers\DestinasiController;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\TravelPlanController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\RecommendationDebugController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AppealController;
 use App\Http\Controllers\PenyediaTravelController;
 use App\Http\Controllers\TravelDashboardController;
+use App\Http\Controllers\TravelPortalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -102,6 +104,16 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/travel-plans/{travelPlan}/destinasi/{destinasi}', [TravelPlanController::class, 'removeDestinasi'])->name('travel-plans.removeDestinasi');
     Route::delete('/travel-plans/{travelPlan}', [TravelPlanController::class, 'destroy'])->name('travel-plans.destroy');
 
+    // Escrow & Travel Booking
+    Route::post('/travel-plans/{travelPlan}/attach-travel', [TravelPlanController::class, 'attachTravel'])->name('travel-plans.attach-travel');
+    Route::get('/travel-plans/{travelPlan}/checkout', [TravelPlanController::class, 'checkout'])->name('travel-plans.checkout');
+    Route::post('/travel-plans/{travelPlan}/checkout', [TravelPlanController::class, 'processCheckout'])->name('travel-plans.process-checkout');
+    Route::get('/travel-plans/{travelPlan}/receipt', [TravelPlanController::class, 'receipt'])->name('travel-plans.receipt');
+
+    // Jadwal Perjalanan (Schedules / Itinerary)
+    Route::post('/travel-plans/{travelPlan}/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
+    Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
+
     // Admin routes
     Route::prefix('admin')
         ->name('admin.')
@@ -157,7 +169,17 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/penyedia-travel/{penyediaTravel}/edit', [AdminController::class, 'penyediaTravelEdit'])->name('penyedia-travel.edit');
             Route::put('/penyedia-travel/{penyediaTravel}', [AdminController::class, 'penyediaTravelUpdate'])->name('penyedia-travel.update');
             Route::delete('/penyedia-travel/{penyediaTravel}', [AdminController::class, 'penyediaTravelDestroy'])->name('penyedia-travel.destroy');
+
+            // Admin Escrow & Holding Funds
+            Route::get('/escrow', [AdminController::class, 'escrowDashboard'])->name('escrow.index');
+            Route::get('/escrow/{travelPlan}/proof', [AdminController::class, 'escrowProof'])->name('escrow.proof');
+            Route::post('/escrow/{travelPlan}/verify', [AdminController::class, 'verifyPayment'])->name('escrow.verify');
+            Route::post('/escrow/{travelPlan}/release', [AdminController::class, 'releasePayout'])->name('escrow.release');
         });
+
+    // Portal Agen Travel (Role = travel / Admin)
+    Route::post('/travel/start-trip/{travelPlan}', [TravelPortalController::class, 'startTrip'])->name('travel.portal.start-trip');
+    Route::post('/travel/end-trip/{travelPlan}', [TravelPortalController::class, 'endTrip'])->name('travel.portal.end-trip');
 
     Route::post('/notifications/mark-all-read', [AdminController::class, 'markAllNotificationsRead'])
         ->name('notifications.mark-all-read');

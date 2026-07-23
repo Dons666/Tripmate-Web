@@ -405,7 +405,8 @@
             <div class="menu">
                 <a href="{{ route('admin.dashboard') }}" class="active">Home</a>
                 <a href="{{ route('admin.places.index') }}">Manage Tempat</a>
-                <a href="{{ route('admin.penyedia-travel.index') }}">Kelola Travel</a>
+                <a href="{{ route('admin.penyedia-travel.index') }}">🚌 Kelola Travel</a>
+                <a href="{{ route('admin.escrow.index') }}">💸 Escrow & Verifikasi Pembayaran</a>
                 <a href="{{ route('admin.comments.index') }}">Manage Komentar</a>
                 <a href="{{ route('admin.users.index') }}">Manage Member</a>
                 <a href="{{ route('admin.appeals.index') }}">Kotak Banding Akun</a>

@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('penyedia_travel', function (Blueprint $table) {
-            $table->string('password')->nullable()->after('email');
-        });
+        if (Schema::hasTable('penyedia_travel') && !Schema::hasColumn('penyedia_travel', 'password')) {
+            Schema::table('penyedia_travel', function (Blueprint $table) {
+                $table->string('password')->nullable()->after('email');
+            });
+        }
     }
 
     /**
