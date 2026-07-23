@@ -28,9 +28,13 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Redirect admin to admin dashboard, regular users to home
+        // Redirect admin to admin dashboard, travel to travel page, regular users to home
         if (auth()->user()->role === 'admin') {
             return redirect()->intended(route('admin.dashboard', absolute: false));
+        }
+
+        if (auth()->user()->role === 'travel') {
+            return redirect()->intended(route('travel.dashboard', absolute: false));
         }
 
         return redirect()->intended(route('home', absolute: false));

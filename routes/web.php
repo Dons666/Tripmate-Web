@@ -14,6 +14,8 @@ use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\RecommendationDebugController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AppealController;
+use App\Http\Controllers\PenyediaTravelController;
+use App\Http\Controllers\TravelDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +26,11 @@ use App\Http\Controllers\AppealController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::post('/appeal', [AppealController::class, 'store'])->name('appeal.store');
 
+Route::get('/penyedia-travel', [PenyediaTravelController::class, 'index'])->name('penyedia-travel.index');
+Route::get('/penyedia-travel/register', [PenyediaTravelController::class, 'create'])->name('penyedia-travel.create');
+Route::post('/penyedia-travel/register', [PenyediaTravelController::class, 'store'])->name('penyedia-travel.store');
+Route::get('/penyedia-travel/sukses', [PenyediaTravelController::class, 'success'])->name('penyedia-travel.success');
+
 
 /*
 |--------------------------------------------------------------------------
@@ -32,6 +39,11 @@ Route::post('/appeal', [AppealController::class, 'store'])->name('appeal.store')
 */
 
 Route::middleware('auth')->group(function () {
+
+    // Travel Partner Dashboard
+    Route::get('/travel/dashboard', [TravelDashboardController::class, 'index'])->name('travel.dashboard');
+    Route::get('/travel/dashboard/edit', [TravelDashboardController::class, 'edit'])->name('travel.dashboard.edit');
+    Route::post('/travel/dashboard/update', [TravelDashboardController::class, 'update'])->name('travel.dashboard.update');
 
     Route::get('/search', [DestinasiController::class, 'search'])->name('destinasi.search');
 
@@ -120,8 +132,11 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/stays/{stay}', [AdminController::class, 'destroyStay'])->name('stays.destroy');
 
             Route::get('/comments', [AdminController::class, 'commentsIndex'])->name('comments.index');
+            Route::post('/comments/scan-ai', [AdminController::class, 'scanCommentsWithAi'])->name('comments.scan-ai');
+            Route::post('/comments/{comment}/recheck-ai', [AdminController::class, 'recheckCommentWithAi'])->name('comments.recheck-ai');
             Route::delete('/comments/{comment}', [AdminController::class, 'destroyComment'])->name('comments.destroy');
             Route::post('/comments/{comment}/warning', [AdminController::class, 'sendWarning'])->name('comments.warning');
+
 
             Route::get('/users', [AdminController::class, 'usersIndex'])->name('users.index');
             Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
@@ -132,6 +147,16 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/appeals', [AdminController::class, 'appealsIndex'])->name('appeals.index');
             Route::post('/appeals/{appeal}/approve', [AdminController::class, 'approveAppeal'])->name('appeals.approve');
             Route::post('/appeals/{appeal}/reject', [AdminController::class, 'rejectAppeal'])->name('appeals.reject');
+
+            Route::get('/penyedia-travel', [AdminController::class, 'penyediaTravelIndex'])->name('penyedia-travel.index');
+            Route::get('/penyedia-travel/create', [AdminController::class, 'penyediaTravelCreate'])->name('penyedia-travel.create');
+            Route::post('/penyedia-travel', [AdminController::class, 'penyediaTravelStore'])->name('penyedia-travel.store');
+            Route::post('/penyedia-travel/{penyediaTravel}/approve', [AdminController::class, 'penyediaTravelApprove'])->name('penyedia-travel.approve');
+            Route::post('/penyedia-travel/{penyediaTravel}/reject', [AdminController::class, 'penyediaTravelReject'])->name('penyedia-travel.reject');
+            Route::get('/penyedia-travel/{penyediaTravel}/document/{type}', [AdminController::class, 'penyediaTravelDocument'])->name('penyedia-travel.document');
+            Route::get('/penyedia-travel/{penyediaTravel}/edit', [AdminController::class, 'penyediaTravelEdit'])->name('penyedia-travel.edit');
+            Route::put('/penyedia-travel/{penyediaTravel}', [AdminController::class, 'penyediaTravelUpdate'])->name('penyedia-travel.update');
+            Route::delete('/penyedia-travel/{penyediaTravel}', [AdminController::class, 'penyediaTravelDestroy'])->name('penyedia-travel.destroy');
         });
 
     Route::post('/notifications/mark-all-read', [AdminController::class, 'markAllNotificationsRead'])

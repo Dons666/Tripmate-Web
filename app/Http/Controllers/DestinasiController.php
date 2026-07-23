@@ -7,18 +7,24 @@ use App\Models\Kategori;
 use App\Models\Rating;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use App\Services\RecommendationService;
+use App\Services\GeminiFilterService;
+
 
 class DestinasiController extends Controller
 {
     protected RecommendationService $recommendationService;
+    protected GeminiFilterService $geminiFilterService;
 
     public function __construct(
-    RecommendationService $recommendationService
-)
-{
-    $this->recommendationService = $recommendationService;
-}
+        RecommendationService $recommendationService,
+        GeminiFilterService $geminiFilterService
+    ) {
+        $this->recommendationService = $recommendationService;
+        $this->geminiFilterService = $geminiFilterService;
+    }
+
     // Halaman Search & Filter
     public function search(Request $request)
     {
@@ -57,44 +63,37 @@ class DestinasiController extends Controller
         return view('destinasi.search', compact('destinasis', 'kotas', 'kategoris'));
     }
 
-
-
     // Halaman Detail Destinasi
     public function show($id)
     {
-    // with('ratings.user') = Eager loading agar komentar ikut bawa nama user yang nulis
-    $destinasi = Destinasi::with('ratings.user')->findOrFail($id);
+        // with('ratings.user') = Eager loading agar komentar ikut bawa nama user yang nulis
+        $destinasi = Destinasi::with('ratings.user')->findOrFail($id);
 
-    $isBookmarked = false;
+        $isBookmarked = false;
 
-    if (Auth::check()) {
+        if (Auth::check()) {
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
 
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
+            $isBookmarked = $user
+                ->bookmarks()
+                ->where('destinasi_id', $id)
+                ->exists();
+        }
 
-        $isBookmarked = $user
-            ->bookmarks()
-            ->where('destinasi_id', $id)
-            ->exists();
+        $similarDestinations = $this->recommendationService->getSimilarDestinations($id);
+
+        return view(
+            'destinasi.show',
+            compact(
+                'destinasi',
+                'isBookmarked',
+                'similarDestinations'
+            )
+        );
     }
 
-        $similarDestinations =
-    $this->recommendationService
-        ->getSimilarDestinations($id);
- 
-    return view(
-        'destinasi.show',
-        compact(
-            'destinasi',
-            'isBookmarked',
-            'similarDestinations'
-        )
-    );
-    }
-
-
-
-    // Simpan Rating & Komentar
+    // Simpan Rating & Komentar dengan Filter AI Gemini
     public function storeRating(Request $request, $id)
     {
         $request->validate([
@@ -102,19 +101,45 @@ class DestinasiController extends Controller
             'komentar' => 'nullable|string|max:500',
         ]);
 
-        // updateOrCreate memastikan 1 user hanya bisa memberi 1 rating per destinasi
-        // Jika user edit rating, akan diupdate. Jika belum, dibuat baru.
+        $komentar = $request->komentar;
+        $isFlagged = false;
+        $flagReason = null;
+        $aiCheckedAt = null;
+
+        if (!empty($komentar) && trim($komentar) !== '') {
+            $aiAnalysis = $this->geminiFilterService->analyzeComment($komentar);
+            $aiCheckedAt = now();
+
+            if (!$aiAnalysis['is_safe']) {
+                return back()->with('error', 'Komentar Anda tidak dapat dipublikasikan karena terdeteksi mengandung konten tidak pantas oleh AI Filter (' . ($aiAnalysis['reason'] ?? 'Pelanggaran konten') . ').')->withInput();
+            }
+
+            $isFlagged = !$aiAnalysis['is_safe'];
+            $flagReason = $aiAnalysis['reason'];
+        }
+
+        $ratingData = [
+            'skor_rating' => $request->skor_rating,
+            'komentar' => $komentar,
+        ];
+
+        if (Schema::hasColumn('ratings', 'is_flagged')) {
+            $ratingData['is_flagged'] = $isFlagged;
+            $ratingData['flag_reason'] = $flagReason;
+            $ratingData['ai_checked_at'] = $aiCheckedAt;
+        }
+
         Rating::updateOrCreate(
             [
                 'user_id' => Auth::id(),
                 'destinasi_id' => $id,
             ],
-            [
-                'skor_rating' => $request->skor_rating,
-                'komentar' => $request->komentar,
-            ]
+            $ratingData
         );
+
+        Rating::updateDestinationRating($id);
 
         return back()->with('success', 'Ulasan berhasil ditambahkan/diperbarui!');
     }
+
 }

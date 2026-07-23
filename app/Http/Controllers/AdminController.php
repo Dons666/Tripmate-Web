@@ -6,11 +6,16 @@ use App\Models\Destinasi;
 use App\Models\Rating;
 use App\Models\User;
 use App\Models\Appeal;
+use App\Models\PenyediaTravel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use App\Services\GeminiFilterService;
+
 
 /**
  * Controller Khusus Admin Panel
@@ -277,11 +282,51 @@ class AdminController extends Controller
             ->with('success', 'Data penginapan berhasil dihapus.');
     }
 
-    public function commentsIndex()
+    public function commentsIndex(Request $request)
     {
-        $comments = Rating::with(['user', 'destinasi'])
-            ->latest()
+        $query = Rating::with(['user', 'destinasi']);
+
+        // Filter: Tipe Tempat
+        if ($request->filled('type') && in_array($request->type, ['wisata', 'kuliner', 'penginapan'])) {
+            $query->whereHas('destinasi', function ($q) use ($request) {
+                $q->where('tipe', $request->type);
+            });
+        }
+
+        // Filter: Rating
+        if ($request->filled('rating') && is_numeric($request->rating)) {
+            $query->where('skor_rating', (float) $request->rating);
+        }
+
+        // Filter: Status Moderasi AI
+        if (Schema::hasColumn('ratings', 'is_flagged') && $request->filled('ai_status')) {
+            if ($request->ai_status === 'flagged') {
+                $query->where('is_flagged', true);
+            } elseif ($request->ai_status === 'clean') {
+                $query->where('is_flagged', false)->whereNotNull('ai_checked_at');
+            } elseif ($request->ai_status === 'unchecked') {
+                $query->whereNull('ai_checked_at');
+            }
+        }
+
+        // Filter: Search Keyword
+        if ($request->filled('search')) {
+            $keyword = trim($request->search);
+            $query->where(function ($q) use ($keyword) {
+                $q->where('komentar', 'like', "%{$keyword}%")
+                  ->orWhereHas('user', function ($uq) use ($keyword) {
+                      $uq->where('name', 'like', "%{$keyword}%")
+                        ->orWhere('email', 'like', "%{$keyword}%");
+                  })
+                  ->orWhereHas('destinasi', function ($dq) use ($keyword) {
+                      $dq->where('nama_destinasi', 'like', "%{$keyword}%");
+                  });
+            });
+        }
+
+        $comments = $query->latest()
             ->paginate(10)
+            ->withQueryString()
             ->through(function (Rating $rating) {
                 $rating->setAttribute('review', $rating->komentar);
                 $rating->setAttribute('rating', $rating->skor_rating);
@@ -291,10 +336,62 @@ class AdminController extends Controller
                 return $rating;
             });
 
+        $totalComments = Rating::count();
+        $flaggedCount = Schema::hasColumn('ratings', 'is_flagged') ? Rating::where('is_flagged', true)->count() : 0;
+        $uncheckedCount = Schema::hasColumn('ratings', 'ai_checked_at') ? Rating::whereNull('ai_checked_at')->count() : $totalComments;
+
         return view('admin.comments.index', [
             'comments' => $comments,
             'maxWarningCount' => 3,
+            'totalComments' => $totalComments,
+            'flaggedCount' => $flaggedCount,
+            'uncheckedCount' => $uncheckedCount,
         ]);
+    }
+
+    public function scanCommentsWithAi(GeminiFilterService $filterService): RedirectResponse
+    {
+        if (!Schema::hasColumn('ratings', 'is_flagged')) {
+            return back()->withErrors(['warning' => 'Kolom moderasi AI belum dimigrasikan ke database.']);
+        }
+
+        $ratings = Rating::whereNotNull('komentar')->where('komentar', '!=', '')->get();
+        $scannedCount = 0;
+        $flaggedCount = 0;
+
+        foreach ($ratings as $rating) {
+            $analysis = $filterService->analyzeComment($rating->komentar);
+            $rating->is_flagged = !$analysis['is_safe'];
+            $rating->flag_reason = $analysis['reason'];
+            $rating->ai_checked_at = now();
+            $rating->save();
+
+            $scannedCount++;
+            if (!$analysis['is_safe']) {
+                $flaggedCount++;
+            }
+        }
+
+        return back()->with('success', "Scan AI Selesai: Berhasil memindai {$scannedCount} komentar. Ditemukan {$flaggedCount} komentar terindikasi bermasalah.");
+    }
+
+    public function recheckCommentWithAi(Rating $comment, GeminiFilterService $filterService): RedirectResponse
+    {
+        if (empty($comment->komentar)) {
+            return back()->with('success', 'Komentar kosong, tidak perlu di-scan.');
+        }
+
+        $analysis = $filterService->analyzeComment($comment->komentar);
+
+        if (Schema::hasColumn('ratings', 'is_flagged')) {
+            $comment->is_flagged = !$analysis['is_safe'];
+            $comment->flag_reason = $analysis['reason'];
+            $comment->ai_checked_at = now();
+            $comment->save();
+        }
+
+        $statusMsg = $analysis['is_safe'] ? 'Aman (Clean)' : 'Terindikasi bermasalah: ' . ($analysis['reason'] ?? 'Konten tidak pantas');
+        return back()->with('success', "Analisis Gemini AI untuk komentar ini: {$statusMsg}");
     }
 
     public function destroyComment(Rating $comment): RedirectResponse
@@ -319,6 +416,7 @@ class AdminController extends Controller
 
         return back()->with('success', 'Peringatan berhasil dikirim.');
     }
+
 
     public function usersIndex()
     {
@@ -602,5 +700,210 @@ class AdminController extends Controller
             'penginapan' => route('admin.stays.show', $item),
             default => route('admin.destinations.show', $item),
         };
+    }
+
+    /**
+     * Manajemen Penyedia Travel (Admin Index)
+     */
+    public function penyediaTravelIndex(Request $request)
+    {
+        $query = PenyediaTravel::query();
+
+        if ($search = $request->input('search')) {
+            $query->where('nama_travel', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('kota_asal_travel', 'like', "%{$search}%")
+                  ->orWhere('jenis_kendaraan', 'like', "%{$search}%")
+                  ->orWhere('nomor_hp_pemilik_travel', 'like', "%{$search}%");
+        }
+
+        $penyediaTravels = $query->latest()->paginate(10)->withQueryString();
+
+        return view('admin.penyedia_travel.index', compact('penyediaTravels'));
+    }
+
+    /**
+     * Form Tambah Penyedia Travel untuk Admin
+     */
+    public function penyediaTravelCreate()
+    {
+        return view('admin.penyedia_travel.create');
+    }
+
+    /**
+     * Simpan Penyedia Travel Baru dari Admin
+     */
+    public function penyediaTravelStore(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_travel' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'password' => 'required|string|min:8',
+            'alamat_travel' => 'required|string',
+            'kota_asal_travel' => 'required|string|max:255',
+            'jenis_kendaraan' => 'required|string|max:255',
+            'harga' => 'required|numeric|min:0',
+            'jadwal_ketersediaan' => 'required|string',
+            'rekening' => 'required|string|max:255',
+            'surat_izin_usaha_travel' => 'required',
+            'ktp_pemilik' => 'required',
+            'nomor_hp_pemilik_travel' => 'required|string|max:30',
+        ]);
+
+        if ($request->hasFile('surat_izin_usaha_travel')) {
+            $validated['surat_izin_usaha_travel'] = $request->file('surat_izin_usaha_travel')->store('travel_docs/surat_izin', 'public');
+        } elseif (is_string($request->input('surat_izin_usaha_travel'))) {
+            $validated['surat_izin_usaha_travel'] = $request->input('surat_izin_usaha_travel');
+        }
+
+        if ($request->hasFile('ktp_pemilik')) {
+            $validated['ktp_pemilik'] = $request->file('ktp_pemilik')->store('travel_docs/ktp', 'public');
+        } elseif (is_string($request->input('ktp_pemilik'))) {
+            $validated['ktp_pemilik'] = $request->input('ktp_pemilik');
+        }
+
+        PenyediaTravel::create(array_merge($validated, ['status' => 'approved']));
+
+        User::updateOrCreate(
+            ['email' => $validated['email']],
+            [
+                'name' => $validated['nama_travel'],
+                'password' => Hash::make($validated['password']),
+                'role' => 'travel',
+                'is_active' => true,
+            ]
+        );
+
+        return redirect()->route('admin.penyedia-travel.index')->with('success', 'Data penyedia travel berhasil ditambahkan dan disetujui!');
+    }
+
+    /**
+     * Setujui / ACC Pendaftaran Penyedia Travel
+     */
+    public function penyediaTravelApprove(PenyediaTravel $penyediaTravel)
+    {
+        $penyediaTravel->update(['status' => 'approved']);
+
+        if ($penyediaTravel->email) {
+            User::updateOrCreate(
+                ['email' => $penyediaTravel->email],
+                [
+                    'name' => $penyediaTravel->nama_travel,
+                    'password' => $penyediaTravel->password ?? Hash::make('password123'),
+                    'role' => 'travel',
+                    'is_active' => true,
+                ]
+            );
+        }
+
+        return redirect()->route('admin.penyedia-travel.index')->with('success', "Penyedia travel '{$penyediaTravel->nama_travel}' telah disetujui (ACC) dan akunnya diaktifkan!");
+    }
+
+    /**
+     * Tolak Pendaftaran Penyedia Travel
+     */
+    public function penyediaTravelReject(PenyediaTravel $penyediaTravel)
+    {
+        $penyediaTravel->update(['status' => 'rejected']);
+
+        if ($penyediaTravel->email) {
+            User::where('email', $penyediaTravel->email)->update(['is_active' => false]);
+        }
+
+        return redirect()->route('admin.penyedia-travel.index')->with('success', "Penyedia travel '{$penyediaTravel->nama_travel}' telah ditolak!");
+    }
+
+    /**
+     * Form Edit Penyedia Travel untuk Admin
+     */
+    public function penyediaTravelEdit(PenyediaTravel $penyediaTravel)
+    {
+        return view('admin.penyedia_travel.edit', compact('penyediaTravel'));
+    }
+
+    /**
+     * Update Penyedia Travel dari Admin
+     */
+    public function penyediaTravelUpdate(Request $request, PenyediaTravel $penyediaTravel)
+    {
+        $validated = $request->validate([
+            'nama_travel' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'password' => 'nullable|string|min:8',
+            'alamat_travel' => 'nullable|string',
+            'kota_asal_travel' => 'nullable|string|max:255',
+            'jenis_kendaraan' => 'nullable|string|max:255',
+            'harga' => 'nullable|numeric|min:0',
+            'jadwal_ketersediaan' => 'nullable|string',
+            'rekening' => 'nullable|string|max:255',
+            'surat_izin_usaha_travel' => 'nullable',
+            'ktp_pemilik' => 'nullable',
+            'nomor_hp_pemilik_travel' => 'required|string|max:30',
+        ]);
+
+        if (empty($validated['password'])) {
+            unset($validated['password']);
+        }
+
+        if ($request->hasFile('surat_izin_usaha_travel')) {
+            $validated['surat_izin_usaha_travel'] = $request->file('surat_izin_usaha_travel')->store('travel_docs/surat_izin', 'public');
+        } elseif ($request->filled('surat_izin_usaha_travel')) {
+            $validated['surat_izin_usaha_travel'] = $request->input('surat_izin_usaha_travel');
+        } else {
+            unset($validated['surat_izin_usaha_travel']);
+        }
+
+        if ($request->hasFile('ktp_pemilik')) {
+            $validated['ktp_pemilik'] = $request->file('ktp_pemilik')->store('travel_docs/ktp', 'public');
+        } elseif ($request->filled('ktp_pemilik')) {
+            $validated['ktp_pemilik'] = $request->input('ktp_pemilik');
+        } else {
+            unset($validated['ktp_pemilik']);
+        }
+
+        $penyediaTravel->update($validated);
+
+        return redirect()->route('admin.penyedia-travel.index')->with('success', 'Data penyedia travel berhasil diperbarui!');
+    }
+
+    /**
+     * Hapus Penyedia Travel dari Admin
+     */
+    public function penyediaTravelDestroy(PenyediaTravel $penyediaTravel)
+    {
+        $penyediaTravel->delete();
+
+        return redirect()->route('admin.penyedia-travel.index')->with('success', 'Data penyedia travel berhasil dihapus!');
+    }
+
+    /**
+     * Lihat / Unduh Dokumen Penyedia Travel (Surat Izin / KTP) Aman Khusus Admin
+     */
+    public function penyediaTravelDocument(PenyediaTravel $penyediaTravel, string $type)
+    {
+        $path = match($type) {
+            'surat_izin' => $penyediaTravel->surat_izin_usaha_travel,
+            'ktp' => $penyediaTravel->ktp_pemilik,
+            default => null
+        };
+
+        if (!$path) {
+            abort(404, 'Dokumen tidak ditemukan.');
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            return Storage::disk('public')->response($path);
+        }
+
+        $fullPath = storage_path('app/public/' . $path);
+        if (file_exists($fullPath)) {
+            return response()->file($fullPath);
+        }
+
+        if (filter_var($path, FILTER_VALIDATE_URL)) {
+            return redirect()->away($path);
+        }
+
+        return response($path, 200)->header('Content-Type', 'text/plain');
     }
 }

@@ -15,6 +15,9 @@
                 <a href="{{ route('bookmarks.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-sky-600 hover:bg-sky-50 transition {{ request()->routeIs('bookmarks.index') ? 'nav-active' : '' }}">
                     Bookmarks
                 </a>
+                <a href="{{ route('penyedia-travel.index') }}" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-sky-600 hover:bg-sky-50 transition {{ request()->routeIs('penyedia-travel.*') ? 'nav-active' : '' }}">
+                    Daftar Travel
+                </a>
             </div>
 
             <div class="flex items-center gap-3">
@@ -24,6 +27,11 @@
                 </a>
 
                 @auth
+                    @if(Auth::user()->role === 'travel')
+                        <a href="{{ route('travel.dashboard') }}" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold transition">
+                            Dashboard Travel
+                        </a>
+                    @endif
                     <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 hover:opacity-80 transition">
                         @if(Auth::user()->avatar)
                             <img src="{{ asset('storage/' . Auth::user()->avatar) }}" alt="Avatar" class="w-8 h-8 rounded-full object-cover border-2 border-sky-100 shadow-sm">

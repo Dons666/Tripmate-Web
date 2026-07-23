@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Destinasi;
 use App\Models\Kategori;
+use App\Models\PenyediaTravel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\RecommendationService;
@@ -227,13 +228,19 @@ $destinasiPopuler = $query
                 );
         }
 
+        $penyediaTravels = PenyediaTravel::where('status', 'approved')
+            ->latest()
+            ->take(6)
+            ->get();
+
         return view(
             'home',
             compact(
                 'kategoris',
                 'destinasiPopuler',
                 'recommendations',
-                'top3Bayesian'
+                'top3Bayesian',
+                'penyediaTravels'
             )
         );
     }

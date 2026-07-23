@@ -61,6 +61,11 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    public function isTravel(): bool
+    {
+        return $this->role === 'travel';
+    }
+
     public function getUsernameAttribute(): string
     {
         return (string) ($this->name ?? '');
