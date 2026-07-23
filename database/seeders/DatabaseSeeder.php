@@ -31,55 +31,7 @@ class DatabaseSeeder extends Seeder
 
         /*
         |--------------------------------------------------------------------------
-        | 2. User Dummy
-        |--------------------------------------------------------------------------
-        */
-        User::firstOrCreate(
-            ['email' => 'user@tripmate.id'],
-            [
-                'name' => 'User TripMate',
-                'role' => 'user',
-                'password' => bcrypt('user123'),
-            ]
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | 3. User Testing untuk Rating
-        |--------------------------------------------------------------------------
-        */
-        $testUsers = [
-            ['name' => 'Joni', 'email' => 'joni@tripmate.id'],
-            ['name' => 'Amel', 'email' => 'amel@tripmate.id'],
-            ['name' => 'Juan', 'email' => 'juan@tripmate.id'],
-            ['name' => 'Agul', 'email' => 'agul@tripmate.id'],
-            ['name' => 'Gamu', 'email' => 'gamu@tripmate.id'],
-            ['name' => 'Melba', 'email' => 'melba@tripmate.id'],
-            ['name' => 'Joe Mama', 'email' => 'joemama@tripmate.id'],
-            ['name' => 'King', 'email' => 'king@tripmate.id'],
-            ['name' => 'Ferdi', 'email' => 'ferdi@tripmate.id'],
-            ['name' => 'Budi Santoso', 'email' => 'budi@tripmate.id'],
-            ['name' => 'Siti Nurhaliza', 'email' => 'siti@tripmate.id'],
-            ['name' => 'Ahmad Ridho', 'email' => 'ahmad@tripmate.id'],
-            ['name' => 'Rini Cahyani', 'email' => 'rini@tripmate.id'],
-            ['name' => 'Doni Wijaya', 'email' => 'doni@tripmate.id'],
-            ['name' => 'Lisa Mona', 'email' => 'lisa@tripmate.id'],
-        ];
-
-        foreach ($testUsers as $user) {
-            User::firstOrCreate(
-                ['email' => $user['email']],
-                [
-                    'name' => $user['name'],
-                    'role' => 'user',
-                    'password' => bcrypt('user123'),
-                ]
-            );
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | 4. Seed Kategori
+        | 2. Seed Kategori
         |--------------------------------------------------------------------------
         */
         $kategoris = [

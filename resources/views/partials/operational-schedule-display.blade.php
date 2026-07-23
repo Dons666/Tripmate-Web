@@ -9,32 +9,16 @@
         'sunday' => 'Minggu',
     ];
 
+    $hariOperasional = $model->hari_operasional ?? 'Setiap Hari';
+    $jamBuka = $model->jam_buka ?? '--:--';
+    $jamTutup = $model->jam_tutup ?? '--:--';
     $schedule = $model->operational_schedule ?? [];
 @endphp
 
 <div>
-    <span class="label">Jadwal Operasional</span>
-
-    @if(!empty($schedule))
-        <div class="value" style="display: grid; gap: 6px; margin-top: 8px;">
-            @foreach($days as $dayKey => $dayLabel)
-                @php
-                    $item = $schedule[$dayKey] ?? null;
-                    $status = $item['status'] ?? 'closed';
-                    $openTime = $item['open_time'] ?? '';
-                    $closeTime = $item['close_time'] ?? '';
-                @endphp
-                <div>
-                    <strong>{{ $dayLabel }}:</strong>
-                    @if($status === 'open')
-                        {{ $openTime ?: '-' }} - {{ $closeTime ?: '-' }}
-                    @else
-                        Tutup
-                    @endif
-                </div>
-            @endforeach
-        </div>
-    @else
-        <div class="value">-</div>
-    @endif
+    <span class="label">Hari & Jam Operasional</span>
+    <div class="value" style="margin-top: 6px;">
+        <div style="font-weight: 700; color: #1f2937;">📅 {{ $hariOperasional }}</div>
+        <div style="color: #4b5563; font-size: 14px; margin-top: 2px;">⏰ {{ $jamBuka }} — {{ $jamTutup }}</div>
+    </div>
 </div>

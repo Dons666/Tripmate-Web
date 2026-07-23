@@ -13,6 +13,7 @@ use App\Http\Controllers\RatingController;
 use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\RecommendationDebugController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AppealController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,6 +22,7 @@ use App\Http\Controllers\AdminController;
 */
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::post('/appeal', [AppealController::class, 'store'])->name('appeal.store');
 
 
 /*
@@ -127,6 +129,9 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/users/{user}/status', [AdminController::class, 'updateUserStatus'])->name('users.update-status');
 
             Route::get('/logs', [AdminController::class, 'logs'])->name('logs');
+            Route::get('/appeals', [AdminController::class, 'appealsIndex'])->name('appeals.index');
+            Route::post('/appeals/{appeal}/approve', [AdminController::class, 'approveAppeal'])->name('appeals.approve');
+            Route::post('/appeals/{appeal}/reject', [AdminController::class, 'rejectAppeal'])->name('appeals.reject');
         });
 
     Route::post('/notifications/mark-all-read', [AdminController::class, 'markAllNotificationsRead'])
