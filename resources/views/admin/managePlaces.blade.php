@@ -1,4 +1,13 @@
-﻿<!DOCTYPE html>
+{{-- 
+|--------------------------------------------------------------------------
+| HALAMAN ADMIN: Manage Tempat (Wisata, Kuliner, Penginapan)
+|--------------------------------------------------------------------------
+| FUNGSI & KEGUNAAN:
+| 1. Mengelola (Tambah, Edit, Hapus) data Destinasi Wisata, Wisata Kuliner, dan Penginapan.
+| 2. Menampilkan tab kategori untuk menyaring daftar tempat berdasarkan tipe tempat.
+| 3. Menyediakan tombol aksi CRUD untuk setiap item tempat.
+--}}
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -315,6 +324,8 @@
                 <a href="{{ route('admin.places.index') }}" class="active">Manage Tempat</a>
                 <a href="{{ route('admin.comments.index') }}">Manage Komentar</a>
                 <a href="{{ route('admin.users.index') }}">Manage Member</a>
+                <a href="{{ route('admin.appeals.index') }}">Kotak Banding Akun</a>
+                <a href="{{ route('admin.logs') }}">Admin Logs</a>
                 <form action="{{ route('logout') }}" method="POST" onsubmit="return confirm('Apakah yakin ingin logout?')">
                     @csrf
                     <button type="submit">Logout</button>

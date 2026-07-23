@@ -1,4 +1,14 @@
-﻿<!DOCTYPE html>
+{{-- 
+|--------------------------------------------------------------------------
+| HALAMAN ADMIN: Manage Member & Pengelolaan Akun
+|--------------------------------------------------------------------------
+| FUNGSI & KEGUNAAN:
+| 1. Menampilkan daftar pengguna (Member & Admin) beserta status keaktifannya.
+| 2. Fitur Tambah Akun Member / Admin baru.
+| 3. Fitur Reset Password pengguna.
+| 4. Fitur Penonaktifan Akun (Nonaktifkan & Aktifkan Kembali) beserta modal pilihan alasan & detail penjelasan.
+--}}
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -229,6 +239,67 @@
             margin-top: 14px;
         }
 
+        .pagination svg {
+            width: 16px;
+            height: 16px;
+            max-width: 16px;
+            max-height: 16px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .pagination nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .pagination nav > div:first-child {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .pagination nav > div:last-child {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pagination nav a,
+        .pagination nav span[aria-current="page"] > span,
+        .pagination nav span[aria-disabled="true"] > span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            background: #fff;
+            color: #374151;
+            text-decoration: none;
+        }
+
+        .pagination nav a:hover {
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .pagination nav span[aria-current="page"] > span {
+            background: #111827;
+            color: #fff;
+            border-color: #111827;
+            font-weight: 600;
+        }
+
+        .pagination nav span[aria-disabled="true"] > span {
+            color: #9ca3af;
+            background: #f9fafb;
+            cursor: not-allowed;
+        }
+
         .actions {
             display: grid;
             gap: 8px;
@@ -394,6 +465,8 @@
                 <a href="{{ route('admin.places.index') }}">Manage Tempat</a>
                 <a href="{{ route('admin.comments.index') }}">Manage Komentar</a>
                 <a href="{{ route('admin.users.index') }}" class="active">Manage Member</a>
+                <a href="{{ route('admin.appeals.index') }}">Kotak Banding Akun</a>
+                <a href="{{ route('admin.logs') }}">Admin Logs</a>
                 <form action="{{ route('logout') }}" method="POST" onsubmit="return confirm('Apakah yakin ingin logout?')">
                     @csrf
                     <button type="submit">Logout</button>

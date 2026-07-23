@@ -173,6 +173,67 @@ document.addEventListener('DOMContentLoaded', function() {
             
 
 
+    <!-- =================================---------------------------------------- -->
+    <!-- BAGIAN: 3 TEMPAT TERBAIK (BERDASARKAN RUMUS BAYESIAN AVERAGE)           -->
+    <!-- Rumus: (C * m + S * r) / (C + S)                                         -->
+    <!-- =================================---------------------------------------- -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-4">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <div class="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-bold mb-2">
+                    🏆 Pemeringkatan Bayesian Average
+                </div>
+                <h2 class="text-3xl font-bold text-slate-900">
+                    3 Tempat Terbaik
+                </h2>
+                <p class="text-slate-500 mt-1 text-sm">
+                    Destinasi teratas dengan bobot rating paling objektif berdasarkan rumus statistik Bayesian.
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            @foreach($top3Bayesian as $index => $destinasi)
+                <div class="relative bg-white rounded-2xl shadow-sm border border-amber-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <!-- Badge Juara 1, 2, 3 -->
+                    <div class="absolute top-3 left-3 z-10 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-extrabold px-3 py-1 rounded-full shadow text-xs flex items-center gap-1">
+                        #{{ $index + 1 }} Terbaik
+                    </div>
+
+                    <div class="h-48 w-full bg-gray-100 relative overflow-hidden">
+                        @if($destinasi->gambar)
+                            <img src="{{ $destinasi->gambar }}" alt="{{ $destinasi->nama_destinasi }}" class="w-full h-full object-cover">
+                        @else
+                            <div class="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 text-xs">
+                                Tidak ada gambar
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="p-5">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-gray-900 text-lg leading-snug">{{ Str::limit($destinasi->nama_destinasi, 24) }}</h3>
+                            <span class="bg-amber-50 text-amber-700 font-extrabold text-xs px-2.5 py-1 rounded-lg border border-amber-200">
+                                ⭐ {{ number_format($destinasi->rating_destinasi, 2) }}
+                            </span>
+                        </div>
+                        <p class="text-gray-500 text-xs mb-3">📍 {{ $destinasi->kota }} · {{ $destinasi->kategori }}</p>
+                        
+                        <div class="flex justify-between items-center pt-3 border-t border-gray-100">
+                            <span class="text-xs text-gray-500">
+                                {{ $destinasi->ratings_count ?? $destinasi->ratings()->count() }} Ulasan Pengunjung
+                            </span>
+                            <a href="{{ route('destinasi.show', $destinasi->id) }}" class="text-sm font-semibold text-sky-600 hover:text-sky-800 hover:underline">Detail →</a>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </section>
+    <!-- =================================---------------------------------------- -->
+    <!-- AKHIR BAGIAN 3 TEMPAT TERBAIK (RUMUS BAYESIAN)                            -->
+    <!-- =================================---------------------------------------- -->
+
     <!-- BAGIAN BARU: Rekomendasi untuk Anda (Horizontal Scroll) -->
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="flex items-center justify-between mb-2">

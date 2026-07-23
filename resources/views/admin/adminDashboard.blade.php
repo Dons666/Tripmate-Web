@@ -1,4 +1,13 @@
-﻿<!DOCTYPE html>
+{{-- 
+|--------------------------------------------------------------------------
+| HALAMAN ADMIN: Dashboard Utama (Home Admin)
+|--------------------------------------------------------------------------
+| FUNGSI & KEGUNAAN:
+| 1. Menampilkan ringkasan statistik total data destinasi, kuliner, dan penginapan.
+| 2. Menampilkan Kotak Notifikasi & Pengajuan Banding Akun dari member yang dinonaktifkan.
+| 3. Menyediakan navigasi sidebar untuk mengelola seluruh fitur Admin Panel.
+--}}
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -398,6 +407,7 @@
                 <a href="{{ route('admin.places.index') }}">Manage Tempat</a>
                 <a href="{{ route('admin.comments.index') }}">Manage Komentar</a>
                 <a href="{{ route('admin.users.index') }}">Manage Member</a>
+                <a href="{{ route('admin.appeals.index') }}">Kotak Banding Akun</a>
                 <a href="{{ route('admin.logs') }}">Admin Logs</a>
                 <form action="{{ route('logout') }}" method="POST" onsubmit="return confirm('Apakah yakin ingin logout?')">
                     @csrf
@@ -424,22 +434,14 @@
 
                 <p class="summary-note">Ringkasan total data pada sistem.</p>
 
-                <div class="section-block">
-                    <div class="section-heading">
-                        <div>
-                            <h2>Catatan Aktivitas</h2>
-                            <p>Lihat perubahan yang dilakukan admin, seperti data tempat dan akun member.</p>
-                        </div>
-                        <a href="{{ route('admin.logs') }}" class="best-link">Buka Log</a>
-                    </div>
-                </div>
+
 
                 @include('partials.notification-box', [
-                    'title' => 'Kotak Notifikasi Admin',
-                    'description' => 'Pantau komentar yang diblokir Gemini dan aktivitas moderasi terbaru.',
+                    'title' => 'Kotak Notifikasi & Pengajuan Banding Akun',
+                    'description' => 'Pantau dan kelola pengajuan banding dari pengguna yang akunnya dinonaktifkan.',
                     'notifications' => $notifications,
                     'unreadNotificationCount' => $unreadNotificationCount,
-                    'emptyText' => 'Belum ada notifikasi moderasi untuk admin.',
+                    'emptyText' => 'Belum ada pengajuan banding akun dari pengguna.',
                     'markAllReadRoute' => route('notifications.mark-all-read'),
                 ])
 

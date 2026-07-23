@@ -42,6 +42,17 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
+        $user = \App\Models\User::where('email', $this->email)->first();
+
+        if ($user && \Illuminate\Support\Facades\Hash::check($this->password, $user->password) && !$user->is_active) {
+            RateLimiter::hit($this->throttleKey());
+            $reason = $user->deactivation_reason_detail ? " Alasan: {$user->deactivation_reason_detail}" : ".";
+
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda telah dinonaktifkan oleh Admin.' . $reason,
+            ]);
+        }
+
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
