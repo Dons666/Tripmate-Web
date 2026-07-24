@@ -19,6 +19,15 @@ class DestinasiImport implements ToModel, WithHeadingRow
             return null;
         }
 
+        // Cek duplikasi di database berdasarkan nama dan kota
+        $existing = \App\Models\Destinasi::where('nama_destinasi', $row['nama'])
+            ->where('kota', $row['kota'] ?? null)
+            ->first();
+
+        if ($existing) {
+            return null; // Lewati jika destinasi sudah ada
+        }
+
         // Transformasi tipe
         $tipe = strtolower(trim($row['tipe'] ?? 'wisata'));
         if ($tipe === 'destinasi') {

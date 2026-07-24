@@ -170,10 +170,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 </script>
+    <!-- BANNER: RUTE CERDAS DIJKSTRA -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+        <div class="bg-gradient-to-r from-sky-600 to-indigo-600 rounded-3xl p-8 md:p-10 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+            <!-- Decorative circle -->
+            <div class="absolute -top-16 -right-16 w-64 h-64 bg-white opacity-10 rounded-full blur-2xl"></div>
             
-
-
-    <!-- =================================---------------------------------------- -->
+            <div class="relative z-10">
+                <span class="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest backdrop-blur-sm border border-white/10">Fitur Baru</span>
+                <h2 class="text-3xl md:text-4xl font-black mt-3 mb-2 text-white">Rute Cerdas Dijkstra</h2>
+                <p class="text-sky-100 max-w-xl text-sm md:text-base">Temukan rute perjalanan terpendek antar destinasi wisata untuk menghemat waktu dan biaya transportasi Anda.</p>
+            </div>
+            
+            <div class="relative z-10 shrink-0">
+                <a href="{{ route('rute.dijkstra') }}" class="inline-flex items-center justify-center bg-white text-sky-700 font-extrabold px-6 py-4 rounded-xl shadow-lg hover:bg-sky-50 hover:scale-105 transition-all duration-300 gap-2">
+                    <span>Coba Sekarang</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </section>    <!-- =================================---------------------------------------- -->
     <!-- BAGIAN: 3 TEMPAT TERBAIK (BERDASARKAN RUMUS BAYESIAN AVERAGE)           -->
     <!-- Rumus: (C * m + S * r) / (C + S)                                         -->
     <!-- =================================---------------------------------------- -->
@@ -382,6 +400,8 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
 </section>
+
+
 
 <!-- Script Slider -->
 <script>

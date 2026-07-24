@@ -58,7 +58,7 @@ class TravelPlanController extends Controller
      */
     public function show(Request $request, string $id)
     {
-        $plan = TravelPlan::with(['destinasis', 'expenses'])
+        $plan = TravelPlan::with(['destinasis', 'expenses', 'schedules.destinasi:id,nama_destinasi,kota,gambar'])
             ->where('user_id', $request->user()->id)
             ->findOrFail($id);
 

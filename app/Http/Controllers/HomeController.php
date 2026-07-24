@@ -237,4 +237,10 @@ $destinasiPopuler = $query
             )
         );
     }
+
+    public function dijkstra()
+    {
+        $destinasis = Destinasi::select('id', 'nama_destinasi', 'kota')->get();
+        return view('rute-dijkstra', compact('destinasis'));
+    }
 }

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Imports\DestinasiImport;
 use App\Models\User;
 use App\Models\Kategori;
+use App\Models\Travel;
 use Illuminate\Database\Seeder;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -51,6 +52,65 @@ class DatabaseSeeder extends Seeder
             Kategori::firstOrCreate([
                 'nama_kategori' => $kategori,
             ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 3. Seed Mitra Agen Travel & Tour
+        |--------------------------------------------------------------------------
+        */
+        $travels = [
+            [
+                'nama_travel' => 'Nusa Horizon Tour & Travel',
+                'slug'        => 'nusa-horizon-tour-travel',
+                'layanan'     => 'Paket Tur Lengkap, Driver & Tiket Masuk',
+                'deskripsi'   => 'Layanan agen travel profesional mencakup penjemputan armada AC, driver berpengalaman, tiket masuk destinasi wisata, serta panduan lokal.',
+                'harga_paket' => 350000,
+                'rating'      => 4.8,
+                'kota'        => 'Bandung',
+                'kontak'      => '0812-3456-7890',
+                'gambar'      => 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80',
+            ],
+            [
+                'nama_travel' => 'Java Explorer Trans & Travel',
+                'slug'        => 'java-explorer-trans-travel',
+                'layanan'     => 'Open Trip, Bus Pariwisata & Tour Guide',
+                'deskripsi'   => 'Solusi travel rombongan dan privat keluarga dengan fasilitas armada luxury bus, tour leader ramah, serta paket makan & dokumentasi foto.',
+                'harga_paket' => 500000,
+                'rating'      => 4.9,
+                'kota'        => 'Yogyakarta',
+                'kontak'      => '0821-9876-5432',
+                'gambar'      => 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=800&q=80',
+            ],
+            [
+                'nama_travel' => 'Parahyangan Heritage Tour',
+                'slug'        => 'parahyangan-heritage-tour',
+                'layanan'     => 'City Tour & Wisata Budaya/Kuliner',
+                'deskripsi'   => 'Menyediakan perjalanan privat jelajah situs bersejarah, pusat oleh-oleh khas, serta rekomendasi tempat kuliner otentik.',
+                'harga_paket' => 250000,
+                'rating'      => 4.7,
+                'kota'        => 'Bandung',
+                'kontak'      => '0857-1122-3344',
+                'gambar'      => 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80',
+            ],
+            [
+                'nama_travel' => 'Nusantara Express Travel',
+                'slug'        => 'nusantara-express-travel',
+                'layanan'     => 'Antar Jemput Door-to-Door & Privat Car',
+                'deskripsi'   => 'Perjalanan langsung antar kota hemat, nyaman dengan armada HiAce & Innova Reborn terbaru.',
+                'harga_paket' => 200000,
+                'rating'      => 4.6,
+                'kota'        => 'Jakarta',
+                'kontak'      => '0813-8899-7766',
+                'gambar'      => 'https://images.unsplash.com/photo-1494515843206-f3117d3f51b7?auto=format&fit=crop&w=800&q=80',
+            ],
+        ];
+
+        foreach ($travels as $t) {
+            Travel::firstOrCreate(
+                ['slug' => $t['slug']],
+                $t
+            );
         }
 
         /*

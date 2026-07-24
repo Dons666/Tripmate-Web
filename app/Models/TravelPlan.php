@@ -8,6 +8,7 @@ class TravelPlan extends Model
 {
     protected $fillable = [
         'user_id',
+        'travel_id',
         'nama_perjalanan',
         'tujuan',
         'catatan',
@@ -15,25 +16,26 @@ class TravelPlan extends Model
         'tanggal_selesai',
         'budget',
         'status',
+        'is_checkout',
         'foto_sampul',
     ];
 
     protected $casts = [
         'tanggal_mulai'   => 'date',
         'tanggal_selesai' => 'date',
+        'is_checkout'     => 'boolean',
     ];
 
-    // <-- TAMBAHKAN INI
     public function getTotalExpensesAttribute()
     {
         return $this->expenses()->sum('jumlah');
     }
-    // -------------------
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+
 
     public function destinasis()
     {
@@ -44,4 +46,9 @@ class TravelPlan extends Model
     {
         return $this->hasMany(Expense::class);
     }
-}
+
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class)->orderBy('tanggal')->orderBy('jam_mulai');
+    }
+}
