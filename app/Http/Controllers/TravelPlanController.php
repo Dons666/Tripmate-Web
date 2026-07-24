@@ -4,8 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\TravelPlan;
 use App\Models\Destinasi;
+<<<<<<< HEAD
 use App\Models\Travel;
 use App\Models\UserNotification;
+=======
+
+>>>>>>> 2b8a5de4b1fb5421787a20f79da6ed6a661a6750
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -53,6 +57,7 @@ class TravelPlanController extends Controller
             abort(403);
         }
 
+<<<<<<< HEAD
         $travelPlan->load('destinasis', 'expenses', 'schedules.destinasi', 'travel');
         $travels = Travel::all();
         return view('travel-plans.show', compact('travelPlan', 'travels'));
@@ -163,6 +168,71 @@ class TravelPlanController extends Controller
         $expensesByCategory = $travelPlan->expenses->groupBy('kategori');
 
         return view('travel-plans.receipt', compact('travelPlan', 'expensesByCategory'));
+=======
+        $travelPlan->load('destinasis', 'expenses', 'schedules.destinasi');
+        return view('travel-plans.show', compact('travelPlan'));
+>>>>>>> 2b8a5de4b1fb5421787a20f79da6ed6a661a6750
+    }
+
+    public function attachTravel(Request $request, TravelPlan $travelPlan)
+    {
+        if ($travelPlan->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'travel_id' => 'nullable|exists:travels,id',
+        ]);
+
+        $travelPlan->update([
+            'travel_id' => $request->travel_id ?: null,
+        ]);
+
+        $msg = $request->travel_id ? 'Mitra Agen Travel berhasil dipasang pada rencana perjalanan!' : 'Agen Travel dilepas. Perencanaan diubah ke Mandiri.';
+
+        return back()->with('success', $msg);
+    }
+
+    public function checkout(TravelPlan $travelPlan)
+    {
+        if ($travelPlan->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if (!$travelPlan->travel_id) {
+            return redirect()->route('travel-plans.show', $travelPlan)
+                ->with('error', 'Checkout hanya tersedia jika Rencana Perjalanan menggunakan Agen Travel.');
+        }
+
+        $travelPlan->load('destinasis', 'expenses', 'schedules.destinasi');
+
+        return view('travel-plans.checkout', compact('travelPlan'));
+    }
+
+    public function processCheckout(Request $request, TravelPlan $travelPlan)
+    {
+        if ($travelPlan->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if (!$travelPlan->travel_id) {
+            return redirect()->route('travel-plans.show', $travelPlan)
+                ->with('error', 'Checkout tidak dapat diproses tanpa Agen Travel.');
+        }
+
+        $request->validate([
+            'metode_pembayaran' => 'required|string',
+        ]);
+
+
+
+        $travelPlan->update([
+            'is_checkout' => true,
+            'status'      => 'Selesai',
+        ]);
+
+        return redirect()->route('travel-plans.receipt', $travelPlan)
+            ->with('success', 'Pembayaran Checkout Paket Travel berhasil! Perjalanan telah resmi dikonfirmasi.');
     }
 
     public function addDestinasi(Request $request, TravelPlan $travelPlan)
@@ -211,6 +281,27 @@ class TravelPlanController extends Controller
             ->with('success', 'Rencana "' . $plan->nama_perjalanan . '" dibuat dan destinasi ditambahkan!');
     }
 
+    public function saveIntegratedRoute(Request $request)
+    {
+        $request->validate([
+            'nama_perjalanan' => 'required|string|max:255',
+            'budget'          => 'required|numeric|min:0',
+            'destinasi_ids'   => 'required|array|min:1',
+            'destinasi_ids.*' => 'exists:destinasi,id',
+        ]);
+
+        $plan = Auth::user()->travelPlans()->create([
+            'nama_perjalanan' => $request->nama_perjalanan,
+            'budget'          => $request->budget,
+            'status'          => 'Perencanaan Aktif',
+        ]);
+
+        $plan->destinasis()->attach($request->destinasi_ids);
+
+        return redirect()->route('travel-plans.show', $plan->id)
+            ->with('success', 'Rute terpendek berhasil disimpan sebagai rencana perjalanan!');
+    }
+
     public function removeDestinasi(TravelPlan $travelPlan, Destinasi $destinasi)
     {
         if ($travelPlan->user_id !== Auth::id()) {
@@ -237,15 +328,31 @@ class TravelPlanController extends Controller
 
     public function complete(TravelPlan $travelPlan)
     {
-    if ($travelPlan->user_id !== Auth::id()) {
-        abort(403);
+        if ($travelPlan->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $travelPlan->update(['status' => 'Selesai']);
+
+        return redirect()->route('travel-plans.receipt', $travelPlan)
+            ->with('success', 'Selamat! Perjalanan Anda telah selesai. Berikut struk dan ringkasan perjalanannya.');
     }
 
-    $travelPlan->update(['status' => 'Selesai']);
+    public function receipt(TravelPlan $travelPlan)
+    {
+        if ($travelPlan->user_id !== Auth::id()) {
+            abort(403);
+        }
 
-    return redirect()->route('travel-plans.show', $travelPlan)
-        ->with('success', 'Perjalanan ditandai sebagai selesai! Cek di Riwayat Perjalanan.');
+        $travelPlan->load('destinasis', 'expenses', 'schedules.destinasi', 'travel');
+
+        $expensesByCategory = $travelPlan->expenses->groupBy(function ($expense) {
+            return $expense->kategori ? ucfirst($expense->kategori) : 'Lain-lain';
+        });
+
+        return view('travel-plans.receipt', compact('travelPlan', 'expensesByCategory'));
     }
+<<<<<<< HEAD
 
     /**
      * Memesan Paket Perjalanan secara langsung dari Daftar Travel (Katalog)
@@ -332,4 +439,6 @@ class TravelPlanController extends Controller
             'armada_name' => $travel->armada->nama_kendaraan
         ]);
     }
+=======
+>>>>>>> 2b8a5de4b1fb5421787a20f79da6ed6a661a6750
 }

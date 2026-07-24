@@ -11,17 +11,30 @@
             @endif
 
             <!-- Tombol Aksi -->
-            <div class="flex justify-end gap-3">
-                @if($travelPlan->status !== 'Selesai')
-                    <form action="{{ route('travel-plans.complete', $travelPlan) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="text-sm text-green-700 hover:text-green-800 font-medium flex items-center gap-1.5 bg-green-50 border border-green-200 px-4 py-2 rounded-xl hover:bg-green-100 transition">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            Selesaikan Perjalanan
-                        </button>
-                    </form>
+            <div class="flex flex-wrap justify-end gap-3">
+                <a href="{{ route('rute.dijkstra') }}" class="text-sm text-sky-700 hover:text-sky-800 font-semibold flex items-center gap-1.5 bg-sky-50 border border-sky-200 px-4 py-2 rounded-xl hover:bg-sky-100 transition">
+                    ⚡ Optimasi Rute Dijkstra
+                </a>
+                @if($travelPlan->status === 'Selesai')
+                    <a href="{{ route('travel-plans.receipt', $travelPlan) }}" class="text-sm text-indigo-700 hover:text-indigo-800 font-semibold flex items-center gap-1.5 bg-indigo-50 border border-indigo-200 px-4 py-2 rounded-xl hover:bg-indigo-100 transition">
+                        🧾 Lihat Struk Perjalanan
+                    </a>
+                @else
+                    @if($travelPlan->travel_id)
+                        <a href="{{ route('travel-plans.checkout', $travelPlan) }}" class="text-sm text-white font-bold flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 px-5 py-2 rounded-xl shadow-md transition">
+                            🛒 Checkout & Bayar Paket Travel
+                        </a>
+                    @else
+                        <form action="{{ route('travel-plans.complete', $travelPlan) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="text-sm text-slate-700 hover:text-slate-800 font-semibold flex items-center gap-1.5 bg-slate-100 border border-slate-200 px-4 py-2 rounded-xl hover:bg-slate-200 transition" title="Selesaikan tanpa checkout (Mandiri)">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Selesaikan Perjalanan Mandiri
+                            </button>
+                        </form>
+                    @endif
                 @endif
-                <button type="button" onclick="openDeleteModal()" class="text-sm text-red-500 hover:text-red-700 font-medium flex items-center gap-1.5 bg-white border border-red-200 px-4 py-2 rounded-xl hover:bg-red-50 transition">
+                <button type="button" onclick="openDeleteModal()" class="text-sm text-red-500 hover:text-red-700 font-semibold flex items-center gap-1.5 bg-white border border-red-200 px-4 py-2 rounded-xl hover:bg-red-50 transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     Hapus Rencana
                 </button>
@@ -29,15 +42,21 @@
 
             <!-- Banner Selesai -->
             @if($travelPlan->status === 'Selesai')
-            <div class="bg-green-50 border border-green-200 rounded-2xl p-5 flex items-center gap-4">
-                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-emerald-900">Perjalanan Telah Selesai 🎉</h3>
+                        <p class="text-xs text-emerald-700 mt-0.5">Rencana ini sudah ditandai selesai. Anda dapat mencetak atau mengunduh Struk Perjalanan.</p>
+                    </div>
                 </div>
-                <div class="flex-1">
-                    <h3 class="font-bold text-green-800">Perjalanan Telah Selesai</h3>
-                    <p class="text-sm text-green-600 mt-0.5">Rencana ini sudah ditandai selesai dan masuk ke Riwayat Perjalanan.</p>
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('travel-plans.receipt', $travelPlan) }}" class="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-xl shadow-sm transition flex items-center gap-1">
+                        🧾 Cetak / Lihat Struk
+                    </a>
                 </div>
-                <a href="{{ route('travel-plans.index') }}" class="text-sm text-green-700 font-semibold hover:underline flex-shrink-0">Lihat Riwayat →</a>
             </div>
             @endif
 
@@ -256,6 +275,102 @@
                         <p class="text-gray-400 text-sm text-center">Belum ada pengeluaran.</p>
                     @endif
                 </div>
+            </div>
+
+            <!-- SCHEDULE & ITINERARY SECTION -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-6">
+                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 pb-4">
+                    <div>
+                        <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2">
+                            📅 Rencana Jadwal Harian (Itinerary)
+                        </h3>
+                        <p class="text-xs text-gray-400 mt-0.5">Susun alur kegiatan per jam/hari selama perjalanan.</p>
+                    </div>
+                </div>
+
+                @if($travelPlan->status !== 'Selesai')
+                <form action="{{ route('schedules.store', $travelPlan) }}" method="POST" class="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-4">
+                    @csrf
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Judul Kegiatan</label>
+                            <input type="text" name="judul" placeholder="Ex: Sarapan khas lokal & Foto bersama" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-sky-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal</label>
+                            <input type="date" name="tanggal" value="{{ $travelPlan->tanggal_mulai ? $travelPlan->tanggal_mulai->format('Y-m-d') : date('Y-m-d') }}" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-sky-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Jam Mulai</label>
+                            <input type="time" name="jam_mulai" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-sky-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Jam Selesai</label>
+                            <input type="time" name="jam_selesai" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-sky-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Destinasi Terkait (Opsional)</label>
+                            <select name="destinasi_id" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs focus:ring-2 focus:ring-sky-500">
+                                <option value="">-- Pilih Destinasi --</option>
+                                @foreach($travelPlan->destinasis as $d)
+                                    <option value="{{ $d->id }}">{{ $d->nama_destinasi }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="md:col-span-3">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Catatan / Deskripsi (Opsional)</label>
+                            <input type="text" name="deskripsi" placeholder="Ex: Beli tiket masuk di gerbang timur" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-sky-500">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full sm:w-auto px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition shadow-sm">
+                        + Tambah Jadwal Kegiatan
+                    </button>
+                </form>
+                @endif
+
+                @if($travelPlan->schedules && $travelPlan->schedules->count() > 0)
+                    <div class="space-y-3">
+                        @foreach($travelPlan->schedules->sortBy('tanggal')->sortBy('jam_mulai') as $sch)
+                            <div class="flex items-start justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200/60 hover:bg-sky-50/50 transition">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">
+                                        ⏰
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="text-xs font-bold text-sky-700 bg-sky-100/80 px-2 py-0.5 rounded-md">
+                                                {{ $sch->tanggal ? $sch->tanggal->format('d M Y') : '' }}
+                                                @if($sch->jam_mulai)
+                                                    · {{ substr($sch->jam_mulai, 0, 5) }} {{ $sch->jam_selesai ? '- ' . substr($sch->jam_selesai, 0, 5) : '' }}
+                                                @endif
+                                            </span>
+                                            @if($sch->destinasi)
+                                                <span class="text-xs font-semibold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md">
+                                                    📍 {{ $sch->destinasi->nama_destinasi }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <h4 class="font-bold text-gray-800 text-sm mt-1">{{ $sch->judul }}</h4>
+                                        @if($sch->deskripsi)
+                                            <p class="text-xs text-gray-500 mt-0.5">{{ $sch->deskripsi }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                @if($travelPlan->status !== 'Selesai')
+                                <form action="{{ route('schedules.destroy', $sch) }}" method="POST" class="flex-shrink-0">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="text-gray-300 hover:text-red-500 transition p-1" title="Hapus jadwal">
+                                        ✕
+                                    </button>
+                                </form>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-gray-400 text-xs text-center py-4">Belum ada rincian jadwal harian. Tambahkan jadwal di atas!</p>
+                @endif
             </div>
         </div>
     </div>
