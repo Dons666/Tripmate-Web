@@ -83,6 +83,7 @@
                         <p class="text-xs text-slate-400 font-medium">Jenis Perjalanan</p>
                         @if($travelPlan->travel)
                             <p class="font-extrabold text-sky-700 text-sm mt-0.5">🚌 {{ $travelPlan->travel->nama_travel }}</p>
+                            <p class="text-[10px] text-sky-600 font-bold mt-1">Pemesanan untuk: {{ $travelPlan->jumlah_peserta }} Peserta (Kursi)</p>
                         @else
                             <p class="font-bold text-slate-600 text-sm mt-0.5">🚶 Perencanaan Mandiri</p>
                         @endif

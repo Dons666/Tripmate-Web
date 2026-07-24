@@ -233,6 +233,11 @@ $destinasiPopuler = $query
             ->take(6)
             ->get();
 
+        $paketTravels = \App\Models\Travel::with('user', 'destinasis', 'armada')
+            ->latest()
+            ->take(6)
+            ->get();
+
         return view(
             'home',
             compact(
@@ -240,7 +245,8 @@ $destinasiPopuler = $query
                 'destinasiPopuler',
                 'recommendations',
                 'top3Bayesian',
-                'penyediaTravels'
+                'penyediaTravels',
+                'paketTravels'
             )
         );
     }

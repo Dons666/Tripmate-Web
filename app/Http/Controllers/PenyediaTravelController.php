@@ -14,23 +14,29 @@ class PenyediaTravelController extends Controller
      */
     public function index(Request $request)
     {
-        $query = PenyediaTravel::query()->where(function($q) {
-            $q->where('status', 'approved')
-              ->orWhereNull('status');
-        });
+        $query = \App\Models\Travel::query();
 
         if ($search = $request->input('search')) {
             $query->where(function($q) use ($search) {
                 $q->where('nama_travel', 'like', "%{$search}%")
-                  ->orWhere('kota_asal_travel', 'like', "%{$search}%")
-                  ->orWhere('jenis_kendaraan', 'like', "%{$search}%")
-                  ->orWhere('alamat_travel', 'like', "%{$search}%");
+                  ->orWhere('kota', 'like', "%{$search}%")
+                  ->orWhere('layanan', 'like', "%{$search}%")
+                  ->orWhere('deskripsi', 'like', "%{$search}%");
             });
         }
 
-        $penyediaTravels = $query->latest()->paginate(9)->withQueryString();
+        $packages = $query->latest()->paginate(9)->withQueryString();
 
-        return view('penyedia_travel.index', compact('penyediaTravels'));
+        return view('penyedia_travel.index', compact('packages'));
+    }
+
+    /**
+     * Tampilkan detail Paket Perjalanan
+     */
+    public function show(\App\Models\Travel $travel)
+    {
+        $travel->load(['destinasis', 'armada']);
+        return view('penyedia_travel.show', compact('travel'));
     }
 
     /**

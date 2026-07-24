@@ -97,7 +97,7 @@
                                     📅 {{ $plan->tanggal_mulai ? $plan->tanggal_mulai->format('d M Y') : '-' }}
                                 </td>
                                 <td>
-                                    <strong style="color: #0284c7;">Rp {{ number_format($plan->travel->harga_paket ?? 0, 0, ',', '.') }}</strong>
+                                    <strong style="color: #0284c7;">Rp {{ number_format($plan->budget ?? 0, 0, ',', '.') }}</strong>
                                 </td>
                                 <td>
                                     @if($plan->trip_status === 'in_progress')

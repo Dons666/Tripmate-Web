@@ -30,8 +30,12 @@
             <!-- PROFILE & MITRA STATUS HEADER -->
             <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-sky-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-wrap items-center justify-between gap-6 relative overflow-hidden">
                 <div class="flex items-center gap-5 relative z-10">
-                    @if(!empty($travel->gambar))
-                        <img src="{{ $travel->gambar }}" alt="" class="w-20 h-20 rounded-2xl object-cover border-2 border-white/20 shadow-md">
+                    @php
+                        $fotoKendaraan = !empty($penyediaTravel->foto_kendaraan) ? json_decode($penyediaTravel->foto_kendaraan, true) : null;
+                        $firstFoto = is_array($fotoKendaraan) ? $fotoKendaraan[0] ?? null : $penyediaTravel->foto_kendaraan;
+                    @endphp
+                    @if(!empty($firstFoto))
+                        <img src="{{ str_starts_with($firstFoto, 'http') ? $firstFoto : asset('storage/' . $firstFoto) }}" alt="" class="w-20 h-20 rounded-2xl object-cover border-2 border-white/20 shadow-md">
                     @else
                         <div class="w-20 h-20 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-3xl font-black">
                             🚌
@@ -58,9 +62,9 @@
                                 {{ $statusLabel }}
                             </span>
                         </div>
-                        <h1 class="text-2xl sm:text-3xl font-black">{{ $penyediaTravel->nama_travel ?? $travel->nama_travel ?? Auth::user()->name }}</h1>
+                        <h1 class="text-2xl sm:text-3xl font-black">{{ $penyediaTravel->nama_travel ?? Auth::user()->name }}</h1>
                         <p class="text-xs text-sky-200 mt-1">
-                            📍 {{ $penyediaTravel->kota_asal_travel ?? $travel->kota ?? 'Indonesia' }} · 📱 {{ $penyediaTravel->nomor_hp_pemilik_travel ?? $travel->kontak ?? '-' }} · ✉️ {{ $penyediaTravel->email ?? Auth::user()->email }}
+                            📍 {{ $penyediaTravel->kota_asal_travel ?? 'Indonesia' }} · 📱 {{ $penyediaTravel->nomor_hp_pemilik_travel ?? '-' }} · ✉️ {{ $penyediaTravel->email ?? Auth::user()->email }}
                         </p>
                     </div>
                 </div>
@@ -90,11 +94,11 @@
                         </div>
                         <div>
                             <p class="text-slate-400 font-medium">Jenis Armada / Kendaraan</p>
-                            <p class="font-bold text-slate-800 mt-0.5">🚐 {{ $penyediaTravel->jenis_kendaraan ?? $travel->layanan ?? 'Bus Pariwisata / Minibus' }}</p>
+                            <p class="font-bold text-slate-800 mt-0.5">🚐 {{ $penyediaTravel->jenis_kendaraan ?? 'Bus Pariwisata / Minibus' }}</p>
                         </div>
                         <div>
-                            <p class="text-slate-400 font-medium">Harga Tarif Paket</p>
-                            <p class="font-black text-sky-600 text-sm mt-0.5">Rp {{ number_format($penyediaTravel->harga ?? $travel->harga_paket ?? 350000, 0, ',', '.') }} / Paket</p>
+                            <p class="text-slate-400 font-medium">Harga Tarif Referensi</p>
+                            <p class="font-black text-sky-600 text-sm mt-0.5">Rp {{ number_format($penyediaTravel->harga ?? 350000, 0, ',', '.') }}</p>
                         </div>
                         <div>
                             <p class="text-slate-400 font-medium">Nomor Rekening Pencairan Admin</p>
@@ -115,7 +119,7 @@
                         <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-2">
                             🚌 Galeri Armada & Dokumentasi Legalitas Usaha
                         </h3>
-                        <a href="{{ route('travel.dashboard.edit') }}" class="text-xs font-bold text-sky-600 hover:underline">
+                        <a href="{{ route('travel.armada.index') }}" class="text-xs font-bold text-sky-600 hover:underline">
                             + Kelola Armada
                         </a>
                     </div>
@@ -156,6 +160,50 @@
                         </div>
                     @endif
                 </div>
+            </div>
+
+            <!-- DAFTAR PAKET PERJALANAN -->
+            <div class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 class="text-lg font-extrabold text-slate-900">🎒 Daftar Paket Perjalanan Anda</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Kelola paket wisata yang bisa dibooking langsung oleh pelanggan.</p>
+                    </div>
+                    <a href="{{ route('travel.packages.create') }}" class="text-xs font-extrabold px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow flex items-center gap-1.5 transition">
+                        + Tambah Paket Baru
+                    </a>
+                </div>
+
+                @if($packages->count() > 0)
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @foreach($packages as $pkg)
+                            <div class="p-4 rounded-2xl border border-slate-200 hover:border-sky-300 transition flex gap-4 bg-slate-50">
+                                <img src="{{ str_starts_with($pkg->gambar, 'http') ? $pkg->gambar : asset('storage/' . $pkg->gambar) }}" class="w-24 h-24 rounded-xl object-cover border border-slate-200 shadow-sm" alt="Package Cover">
+                                <div class="flex-1 flex flex-col justify-between">
+                                    <div>
+                                        <h4 class="font-bold text-slate-800">{{ $pkg->nama_travel }}</h4>
+                                        <p class="text-[11px] text-slate-500 mt-1 line-clamp-2">{{ $pkg->deskripsi }}</p>
+                                    </div>
+                                    <div class="flex items-center justify-between mt-3">
+                                        <span class="text-sm font-black text-sky-600">Rp {{ number_format($pkg->harga_paket, 0, ',', '.') }}</span>
+                                        <div class="flex gap-2">
+                                            <a href="{{ route('travel.packages.edit', $pkg->id) }}" class="px-3 py-1.5 bg-white border border-slate-300 text-slate-600 hover:text-sky-600 rounded-lg text-[10px] font-bold">Edit</a>
+                                            <form action="{{ route('travel.packages.destroy', $pkg->id) }}" method="POST" onsubmit="return confirm('Yakin hapus paket ini?');">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="px-3 py-1.5 bg-white border border-rose-200 text-rose-500 hover:bg-rose-50 rounded-lg text-[10px] font-bold">Hapus</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="p-8 text-center bg-slate-50 border border-slate-200 border-dashed rounded-2xl">
+                        <p class="text-slate-400 font-medium text-sm">Belum ada paket perjalanan.</p>
+                        <a href="{{ route('travel.packages.create') }}" class="text-sky-600 font-bold text-sm hover:underline mt-2 inline-block">Mulai buat paket pertama Anda!</a>
+                    </div>
+                @endif
             </div>
 
             <!-- BOOKINGS & ESCROW SCHEDULE LIST -->
@@ -240,7 +288,7 @@
                                     <div class="bg-white p-3 rounded-xl border border-slate-100">
                                         <p class="text-slate-400 font-medium">Nilai Paket Tur Travel</p>
                                         <p class="font-extrabold text-sky-600 mt-0.5">
-                                            Rp {{ number_format($travel->harga_paket ?? $booking->budget, 0, ',', '.') }}
+                                            Rp {{ number_format($booking->travel->harga_paket ?? $booking->budget, 0, ',', '.') }}
                                         </p>
                                     </div>
                                 </div>

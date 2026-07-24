@@ -958,13 +958,9 @@ class AdminController extends Controller
             ->orderByDesc('updated_at')
             ->get();
 
-        $totalHolding = $escrowPlans->where('payment_status', 'escrow_held')->sum(function ($p) {
-            return $p->travel->harga_paket ?? 0;
-        });
+        $totalHolding = $escrowPlans->where('payment_status', 'escrow_held')->sum('budget');
 
-        $totalReleased = $escrowPlans->where('payment_status', 'payout_released')->sum(function ($p) {
-            return $p->travel->harga_paket ?? 0;
-        });
+        $totalReleased = $escrowPlans->where('payment_status', 'payout_released')->sum('budget');
 
         return view('admin.escrow.index', compact('escrowPlans', 'totalHolding', 'totalReleased'));
     }
@@ -990,7 +986,7 @@ class AdminController extends Controller
         UserNotification::sendNotification(
             $travelPlan->user_id,
             '✅ Pembayaran Berhasil Diverifikasi!',
-            'Bukti pembayaran paket travel "' . ($travelPlan->travel->nama_travel ?? 'Travel') . '" sebesar Rp ' . number_format($travelPlan->travel->harga_paket ?? 0, 0, ',', '.') . ' telah diverifikasi. Dana Anda kini disimpan aman oleh Admin (Escrow) hingga trip selesai.',
+            'Bukti pembayaran paket travel "' . ($travelPlan->travel->nama_travel ?? 'Travel') . '" sebesar Rp ' . number_format($travelPlan->budget, 0, ',', '.') . ' telah diverifikasi. Dana Anda kini disimpan aman oleh Admin (Escrow) hingga trip selesai.',
             'success'
         );
 
@@ -1023,7 +1019,7 @@ class AdminController extends Controller
             'payout_released_at' => now(),
         ]);
 
-        $amount = number_format($travelPlan->travel->harga_paket ?? 0, 0, ',', '.');
+        $amount = number_format($travelPlan->budget ?? 0, 0, ',', '.');
 
         // Notifikasi ke Agen Travel
         if ($travelPlan->travel->user_id) {

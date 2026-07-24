@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\PenyediaTravel;
+use App\Models\Travel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class TravelDashboardController extends Controller
 {
@@ -24,19 +27,17 @@ class TravelDashboardController extends Controller
         // Cari data penyedia travel khusus milik akun yang sedang login
         $penyediaTravel = PenyediaTravel::where('email', $user->email)->first();
 
-        // Cari entity Travel yang terhubung ke user ID ini
-        $travel = \App\Models\Travel::where('user_id', $user->id)->first();
+        // Cari semua entity Travel (Paket) yang terhubung ke user ID ini
+        $packages = Travel::where('user_id', $user->id)->get();
+        
+        $packageIds = $packages->pluck('id');
 
-        if (!$travel && $penyediaTravel) {
-            $travel = \App\Models\Travel::where('nama_travel', $penyediaTravel->nama_travel)->first();
-        }
-
-        $bookings = \App\Models\TravelPlan::where('travel_id', $travel->id ?? 0)
-            ->with(['user', 'destinasis', 'schedules'])
+        $bookings = \App\Models\TravelPlan::whereIn('travel_id', $packageIds)
+            ->with(['user', 'destinasis', 'schedules', 'travel'])
             ->orderByDesc('created_at')
             ->get();
 
-        return view('travel.dashboard', compact('user', 'penyediaTravel', 'travel', 'bookings'));
+        return view('travel.dashboard', compact('user', 'penyediaTravel', 'packages', 'bookings'));
     }
 
     /**
@@ -139,5 +140,144 @@ class TravelDashboardController extends Controller
         ]);
 
         return redirect()->route('travel.dashboard')->with('success', 'Perubahan data travel Anda berhasil diperbarui! Status kemitraan Anda tetap Aktif (ACC).');
+    }
+
+    /**
+     * Tampilkan Form Tambah Paket
+     */
+    public function createPackage()
+    {
+        $armadas = Auth::user()->armadas;
+        $wisatas = \App\Models\Destinasi::where('tipe', 'wisata')->orderBy('nama_destinasi')->get();
+        $kuliners = \App\Models\Destinasi::where('tipe', 'kuliner')->orderBy('nama_destinasi')->get();
+        $penginapans = \App\Models\Destinasi::where('tipe', 'penginapan')->orderBy('nama_destinasi')->get();
+        return view('travel.packages.create', compact('armadas', 'wisatas', 'kuliners', 'penginapans'));
+    }
+
+    /**
+     * Simpan Paket Baru
+     */
+    public function storePackage(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_travel' => 'required|string|max:255',
+            'layanan' => 'required|string|max:255',
+            'deskripsi' => 'required|string',
+            'harga_paket' => 'required|numeric|min:0',
+            'tanggal_keberangkatan' => 'required|date',
+            'kota' => 'required|string|max:255',
+            'kontak' => 'required|string|max:255',
+            'gambar' => 'nullable|image|max:2048',
+            'armada_id' => 'required|exists:armadas,id',
+            'wisata_ids' => 'nullable|array',
+            'wisata_ids.*' => 'exists:destinasi,id',
+            'kuliner_ids' => 'nullable|array',
+            'kuliner_ids.*' => 'exists:destinasi,id',
+            'penginapan_ids' => 'nullable|array',
+            'penginapan_ids.*' => 'exists:destinasi,id',
+        ]);
+
+        // Cek kepemilikan armada
+        $armada = \App\Models\Armada::where('id', $validated['armada_id'])->where('user_id', Auth::id())->firstOrFail();
+
+        $travelData = collect($validated)->except(['wisata_ids', 'kuliner_ids', 'penginapan_ids'])->toArray();
+        $travelData['user_id'] = Auth::id();
+        $travelData['slug'] = Str::slug($travelData['nama_travel']) . '-' . uniqid();
+        $travelData['rating'] = 5.0; // Default rating
+
+        if ($request->hasFile('gambar')) {
+            $travelData['gambar'] = '/storage/' . $request->file('gambar')->store('travel-covers', 'public');
+        } else {
+            $travelData['gambar'] = 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80';
+        }
+
+        $travel = Travel::create($travelData);
+        
+        $allDestinasis = array_merge(
+            $request->wisata_ids ?? [],
+            $request->kuliner_ids ?? [],
+            $request->penginapan_ids ?? []
+        );
+        $travel->destinasis()->sync($allDestinasis);
+
+        return redirect()->route('travel.dashboard')->with('success', 'Paket Perjalanan berhasil ditambahkan!');
+    }
+
+    /**
+     * Tampilkan Form Edit Paket
+     */
+    public function editPackage(Travel $travel)
+    {
+        if ($travel->user_id !== Auth::id()) {
+            abort(403);
+        }
+        $armadas = Auth::user()->armadas;
+        $wisatas = \App\Models\Destinasi::where('tipe', 'wisata')->orderBy('nama_destinasi')->get();
+        $kuliners = \App\Models\Destinasi::where('tipe', 'kuliner')->orderBy('nama_destinasi')->get();
+        $penginapans = \App\Models\Destinasi::where('tipe', 'penginapan')->orderBy('nama_destinasi')->get();
+        return view('travel.packages.edit', compact('travel', 'armadas', 'wisatas', 'kuliners', 'penginapans'));
+    }
+
+    /**
+     * Update Paket
+     */
+    public function updatePackage(Request $request, Travel $travel)
+    {
+        if ($travel->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'nama_travel' => 'required|string|max:255',
+            'layanan' => 'required|string|max:255',
+            'deskripsi' => 'required|string',
+            'harga_paket' => 'required|numeric|min:0',
+            'tanggal_keberangkatan' => 'required|date',
+            'kota' => 'required|string|max:255',
+            'kontak' => 'required|string|max:255',
+            'gambar' => 'nullable|image|max:2048',
+            'armada_id' => 'required|exists:armadas,id',
+            'wisata_ids' => 'nullable|array',
+            'wisata_ids.*' => 'exists:destinasi,id',
+            'kuliner_ids' => 'nullable|array',
+            'kuliner_ids.*' => 'exists:destinasi,id',
+            'penginapan_ids' => 'nullable|array',
+            'penginapan_ids.*' => 'exists:destinasi,id',
+        ]);
+
+        // Cek kepemilikan armada
+        $armada = \App\Models\Armada::where('id', $validated['armada_id'])->where('user_id', Auth::id())->firstOrFail();
+
+        $travelData = collect($validated)->except(['wisata_ids', 'kuliner_ids', 'penginapan_ids'])->toArray();
+        $travelData['slug'] = Str::slug($travelData['nama_travel']) . '-' . uniqid();
+
+        if ($request->hasFile('gambar')) {
+            $travelData['gambar'] = '/storage/' . $request->file('gambar')->store('travel-covers', 'public');
+        }
+
+        $travel->update($travelData);
+        
+        $allDestinasis = array_merge(
+            $request->wisata_ids ?? [],
+            $request->kuliner_ids ?? [],
+            $request->penginapan_ids ?? []
+        );
+        $travel->destinasis()->sync($allDestinasis);
+
+        return redirect()->route('travel.dashboard')->with('success', 'Paket Perjalanan berhasil diupdate!');
+    }
+
+    /**
+     * Hapus Paket
+     */
+    public function destroyPackage(Travel $travel)
+    {
+        if ($travel->user_id !== Auth::id()) {
+            abort(403);
+        }
+        
+        $travel->delete();
+        
+        return redirect()->route('travel.dashboard')->with('success', 'Paket Perjalanan berhasil dihapus!');
     }
 }

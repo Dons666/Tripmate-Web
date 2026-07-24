@@ -50,10 +50,10 @@
                             <div class="p-4 flex items-center justify-between bg-slate-50">
                                 <div>
                                     <p class="font-bold text-slate-800 text-sm">🚌 Paket Travel: {{ $travelPlan->travel->nama_travel }}</p>
-                                    <p class="text-xs text-slate-500">Armada AC, Layanan Supir, Tiket Masuk & Pemandu Tur</p>
+                                    <p class="text-xs text-slate-500">Harga Paket: Rp {{ number_format($travelPlan->travel->harga_paket, 0, ',', '.') }} x {{ $travelPlan->jumlah_peserta }} Peserta</p>
                                 </div>
                                 <span class="font-extrabold text-slate-800 text-sm">
-                                    Rp {{ number_format($travelPlan->travel->harga_paket, 0, ',', '.') }}
+                                    Rp {{ number_format($travelPlan->travel->harga_paket * $travelPlan->jumlah_peserta, 0, ',', '.') }}
                                 </span>
                             </div>
                         @endif

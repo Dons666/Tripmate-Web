@@ -94,4 +94,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(TravelPlan::class);
     }
+
+    public function armadas()
+    {
+        return $this->hasMany(Armada::class);
+    }
 }

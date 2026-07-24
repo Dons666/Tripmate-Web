@@ -32,7 +32,8 @@ Route::get('/penyedia-travel', [PenyediaTravelController::class, 'index'])->name
 Route::get('/penyedia-travel/register', [PenyediaTravelController::class, 'create'])->name('penyedia-travel.create');
 Route::post('/penyedia-travel/register', [PenyediaTravelController::class, 'store'])->name('penyedia-travel.store');
 Route::get('/penyedia-travel/sukses', [PenyediaTravelController::class, 'success'])->name('penyedia-travel.success');
-
+Route::get('/penyedia-travel/{travel}', [PenyediaTravelController::class, 'show'])->name('penyedia-travel.show');
+Route::post('/penyedia-travel/{travel}/book', [App\Http\Controllers\TravelPlanController::class, 'bookPackage'])->name('travel.packages.book')->middleware('auth');
 
 /*
 |--------------------------------------------------------------------------
@@ -42,10 +43,22 @@ Route::get('/penyedia-travel/sukses', [PenyediaTravelController::class, 'success
 
 Route::middleware('auth')->group(function () {
 
-    // Travel Partner Dashboard
+    // Travel Partner Dashboard & Packages
     Route::get('/travel/dashboard', [TravelDashboardController::class, 'index'])->name('travel.dashboard');
     Route::get('/travel/dashboard/edit', [TravelDashboardController::class, 'edit'])->name('travel.dashboard.edit');
     Route::post('/travel/dashboard/update', [TravelDashboardController::class, 'update'])->name('travel.dashboard.update');
+    
+    // Travel Packages Management
+    Route::get('/travel/packages/create', [TravelDashboardController::class, 'createPackage'])->name('travel.packages.create');
+    Route::post('/travel/packages', [TravelDashboardController::class, 'storePackage'])->name('travel.packages.store');
+    Route::get('/travel/packages/{travel}/edit', [TravelDashboardController::class, 'editPackage'])->name('travel.packages.edit');
+    Route::put('/travel/packages/{travel}', [TravelDashboardController::class, 'updatePackage'])->name('travel.packages.update');
+    Route::delete('/travel/packages/{travel}', [TravelDashboardController::class, 'destroyPackage'])->name('travel.packages.destroy');
+
+    // Armada Travel
+    Route::resource('travel/armada', App\Http\Controllers\ArmadaController::class)->names('travel.armada')->except(['create', 'show', 'edit']);
+
+    Route::get('/api/travel/{travel}/availability', [App\Http\Controllers\TravelPlanController::class, 'checkAvailability'])->name('api.travel.availability');
 
     Route::get('/search', [DestinasiController::class, 'search'])->name('destinasi.search');
 
@@ -107,7 +120,7 @@ Route::middleware(['auth'])->group(function () {
     // Escrow & Travel Booking
     Route::post('/travel-plans/{travelPlan}/attach-travel', [TravelPlanController::class, 'attachTravel'])->name('travel-plans.attach-travel');
     Route::get('/travel-plans/{travelPlan}/checkout', [TravelPlanController::class, 'checkout'])->name('travel-plans.checkout');
-    Route::post('/travel-plans/{travelPlan}/checkout', [TravelPlanController::class, 'processCheckout'])->name('travel-plans.process-checkout');
+    Route::post('/travel-plans/{travelPlan}/process-checkout', [TravelPlanController::class, 'processCheckout'])->name('travel-plans.process-checkout');
     Route::get('/travel-plans/{travelPlan}/receipt', [TravelPlanController::class, 'receipt'])->name('travel-plans.receipt');
 
     // Jadwal Perjalanan (Schedules / Itinerary)
@@ -149,6 +162,11 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/comments/{comment}', [AdminController::class, 'destroyComment'])->name('comments.destroy');
             Route::post('/comments/{comment}/warning', [AdminController::class, 'sendWarning'])->name('comments.warning');
 
+            // Escrow
+            Route::get('/escrow', [AdminController::class, 'escrowDashboard'])->name('escrow.index');
+            Route::post('/escrow/{travelPlan}/verify', [AdminController::class, 'verifyPayment'])->name('escrow.verify');
+            Route::post('/escrow/{travelPlan}/payout', [AdminController::class, 'releasePayout'])->name('escrow.payout');
+            Route::get('/escrow/{travelPlan}/proof', [AdminController::class, 'escrowProof'])->name('escrow.proof');
 
             Route::get('/users', [AdminController::class, 'usersIndex'])->name('users.index');
             Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');

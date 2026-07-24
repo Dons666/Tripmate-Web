@@ -115,22 +115,7 @@
                     </div>
                 @endif
 
-                <!-- GANTI AGEN TRAVEL FORM -->
-                <form action="{{ route('travel-plans.attach-travel', $travelPlan) }}" method="POST" class="flex flex-wrap items-center gap-3 pt-2">
-                    @csrf
-                    <label class="text-xs font-bold text-slate-600">Pilih Agen Travel:</label>
-                    <select name="travel_id" class="text-xs rounded-xl border-slate-300 py-2 px-3 focus:ring-sky-500 focus:border-sky-500">
-                        <option value="">-- Perencanaan Mandiri (Tanpa Travel) --</option>
-                        @foreach($travels as $t)
-                            <option value="{{ $t->id }}" {{ $travelPlan->travel_id == $t->id ? 'selected' : '' }}>
-                                🚌 {{ $t->nama_travel }} (Rp {{ number_format($t->harga_paket, 0, ',', '.') }})
-                            </option>
-                        @endforeach
-                    </select>
-                    <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition">
-                        Simpan Mode Perjalanan
-                    </button>
-                </form>
+
             </div>
 
             <!-- Info Rencana & Budget -->

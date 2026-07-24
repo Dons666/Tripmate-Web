@@ -478,6 +478,70 @@ document.addEventListener('DOMContentLoaded', function() {
         @endif
     </section>
 
+    <!-- Section: Paket Travel Tersedia -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                    Paket Travel Menarik 🧳
+                </h2>
+                <p class="text-sm text-slate-500 mt-2 font-medium">Pesan paket liburan lengkap dari mitra terpercaya</p>
+            </div>
+            <a href="{{ route('penyedia-travel.index') }}" class="hidden sm:inline-flex items-center gap-1 text-sm font-bold text-sky-600 hover:text-sky-700 transition">
+                Lihat Semua &rarr;
+            </a>
+        </div>
+
+        @if(isset($paketTravels) && count($paketTravels) > 0)
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach($paketTravels as $paket)
+                    <a href="{{ route('penyedia-travel.show', $paket) }}" class="block bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                        <div class="relative h-48 w-full rounded-2xl overflow-hidden mb-4 bg-slate-100">
+                            @if($paket->gambar)
+                                <img src="{{ asset('storage/' . $paket->gambar) }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Paket Travel">
+                            @else
+                                <div class="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                                    <span class="text-4xl mb-2">🏖️</span>
+                                    <span class="text-xs font-bold uppercase tracking-widest">TripMate</span>
+                                </div>
+                            @endif
+                            <div class="absolute top-3 right-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-xl text-xs font-black text-sky-700 shadow-sm">
+                                Rp {{ number_format($paket->harga_paket, 0, ',', '.') }} / Pax
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <h3 class="font-extrabold text-slate-900 text-lg group-hover:text-sky-600 transition-colors line-clamp-1">
+                                    {{ $paket->nama_travel }}
+                                </h3>
+                                <p class="text-xs font-medium text-slate-500 mt-1 line-clamp-1">By: {{ $paket->user->name ?? 'Mitra Travel' }}</p>
+                            </div>
+                            
+                            <div class="flex items-center gap-2 text-[11px] font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                                <span>🚐</span>
+                                <span class="truncate">{{ $paket->armada->nama_kendaraan ?? 'Kendaraan Nyaman' }}</span>
+                                <span class="text-slate-300 mx-1">•</span>
+                                <span class="text-sky-600">{{ $paket->armada->kapasitas_kursi ?? '-' }} Kursi</span>
+                            </div>
+
+                            @if($paket->destinasis->count() > 0)
+                                <div class="text-[11px] font-medium text-slate-500 line-clamp-1">
+                                    <span class="font-bold text-slate-700">Rute:</span> 
+                                    {{ $paket->destinasis->pluck('nama_destinasi')->join(', ') }}
+                                </div>
+                            @endif
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        @else
+            <div class="text-center py-10 bg-slate-50 rounded-3xl border border-slate-200">
+                <p class="text-xs text-slate-500 font-bold">Belum ada paket travel yang tersedia.</p>
+            </div>
+        @endif
+    </section>
+
 <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
     <div class="rounded-3xl bg-gradient-to-r from-sky-50 to-cyan-50 overflow-hidden shadow-lg border border-sky-100">

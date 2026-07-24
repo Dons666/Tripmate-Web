@@ -117,9 +117,9 @@ class TravelPlanController extends Controller
         if ($travelPlan->travel) {
             $travelPlan->expenses()->firstOrCreate([
                 'nama_pengeluaran' => 'Paket Travel: ' . $travelPlan->travel->nama_travel,
-            ], [
                 'user_id'  => Auth::id(),
-                'jumlah'   => $travelPlan->travel->harga_paket,
+            ], [
+                'jumlah'   => $travelPlan->budget,
                 'tanggal'  => now()->format('Y-m-d'),
                 'kategori' => 'Paket Travel',
             ]);
@@ -247,5 +247,89 @@ class TravelPlanController extends Controller
         ->with('success', 'Perjalanan ditandai sebagai selesai! Cek di Riwayat Perjalanan.');
     }
 
+    /**
+     * Memesan Paket Perjalanan secara langsung dari Daftar Travel (Katalog)
+     */
+    public function bookPackage(Request $request, Travel $travel)
+    {
+        if (!$travel->tanggal_keberangkatan) {
+            return back()->with('error', 'Paket Travel ini belum menentukan tanggal keberangkatan.');
+        }
 
+        $request->validate([
+            'jumlah_peserta' => 'required|integer|min:1'
+        ]);
+
+        // Cek ketersediaan kursi
+        $armada = $travel->armada;
+        if ($armada) {
+            $bookedSeats = TravelPlan::where('travel_id', $travel->id)
+                ->whereDate('tanggal_mulai', $travel->tanggal_keberangkatan)
+                ->whereNotIn('status', ['Dibatalkan'])
+                ->sum('jumlah_peserta');
+
+            $availableSeats = $armada->kapasitas_kursi - $bookedSeats;
+
+            if ($request->jumlah_peserta > $availableSeats) {
+                return back()->with('error', 'Maaf, sisa kursi untuk tanggal tersebut tidak mencukupi. Sisa kursi: ' . max(0, $availableSeats));
+            }
+        }
+
+        $totalHarga = $travel->harga_paket * $request->jumlah_peserta;
+
+        $plan = Auth::user()->travelPlans()->create([
+            'nama_perjalanan' => 'Pemesanan: ' . $travel->nama_travel,
+            'tujuan'          => $travel->kota ?? 'Destinasi Paket',
+            'catatan'         => 'Booking paket perjalanan otomatis melalui portal.',
+            'tanggal_mulai'   => $travel->tanggal_keberangkatan,
+            'tanggal_selesai' => \Carbon\Carbon::parse($travel->tanggal_keberangkatan)->addDays(1),
+            'budget'          => $totalHarga,
+            'jumlah_peserta'  => $request->jumlah_peserta,
+            'status'          => 'Perencanaan Aktif',
+            'travel_id'       => $travel->id,
+            'payment_status'  => 'unpaid',
+            'trip_status'     => 'planning'
+        ]);
+
+        if ($travel->destinasis) {
+            $plan->destinasis()->sync($travel->destinasis->pluck('id'));
+            
+            foreach ($travel->destinasis as $idx => $destinasi) {
+                $plan->schedules()->create([
+                    'destinasi_id' => $destinasi->id,
+                    'judul'        => 'Kunjungan ke ' . $destinasi->nama_destinasi,
+                    'deskripsi'    => 'Destinasi wisata ' . $destinasi->kategori,
+                    'tanggal'      => $travel->tanggal_keberangkatan,
+                    'jam_mulai'    => \Carbon\Carbon::parse('08:00')->addHours($idx * 2)->format('H:i'),
+                    'jam_selesai'  => \Carbon\Carbon::parse('10:00')->addHours($idx * 2)->format('H:i'),
+                ]);
+            }
+        }
+
+        return redirect()->route('travel-plans.checkout', $plan->id)
+            ->with('success', 'Paket berhasil dipesan! Silakan lanjutkan ke pembayaran.');
+    }
+
+    /**
+     * API untuk cek ketersediaan kursi
+     */
+    public function checkAvailability(Request $request, Travel $travel)
+    {
+        $date = $travel->tanggal_keberangkatan;
+        if (!$date || !$travel->armada) {
+            return response()->json(['available_seats' => 0, 'armada_name' => '-']);
+        }
+
+        $bookedSeats = TravelPlan::where('travel_id', $travel->id)
+            ->whereDate('tanggal_mulai', $date)
+            ->whereNotIn('status', ['Dibatalkan'])
+            ->sum('jumlah_peserta');
+
+        $availableSeats = $travel->armada->kapasitas_kursi - $bookedSeats;
+
+        return response()->json([
+            'available_seats' => max(0, $availableSeats),
+            'armada_name' => $travel->armada->nama_kendaraan
+        ]);
+    }
 }

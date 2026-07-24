@@ -44,6 +44,7 @@
                 <a href="{{ route('admin.penyedia-travel.index') }}" class="active">Kelola Travel</a>
                 <a href="{{ route('admin.comments.index') }}">Manage Komentar</a>
                 <a href="{{ route('admin.users.index') }}">Manage Member</a>
+                <a href="{{ route('admin.escrow.index') }}">Escrow Pembayaran</a>
                 <a href="{{ route('admin.appeals.index') }}">Kotak Banding Akun</a>
                 <a href="{{ route('admin.logs') }}">Admin Logs</a>
                 <form action="{{ route('logout') }}" method="POST" onsubmit="return confirm('Apakah yakin ingin logout?')">

@@ -15,6 +15,7 @@ class TravelPlan extends Model
         'tanggal_mulai',
         'tanggal_selesai',
         'budget',
+        'jumlah_peserta',
         'status',
         'is_checkout',
         'payment_status',
