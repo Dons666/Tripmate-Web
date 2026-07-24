@@ -15,13 +15,9 @@ use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\RecommendationDebugController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AppealController;
-<<<<<<< HEAD
 use App\Http\Controllers\PenyediaTravelController;
 use App\Http\Controllers\TravelDashboardController;
 use App\Http\Controllers\TravelPortalController;
-=======
-use App\Http\Controllers\ScheduleController;
->>>>>>> 2b8a5de4b1fb5421787a20f79da6ed6a661a6750
 
 /*
 |--------------------------------------------------------------------------
@@ -129,24 +125,9 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/travel-plans/{travelPlan}/destinasi/{destinasi}', [TravelPlanController::class, 'removeDestinasi'])->name('travel-plans.removeDestinasi');
     Route::delete('/travel-plans/{travelPlan}', [TravelPlanController::class, 'destroy'])->name('travel-plans.destroy');
 
-<<<<<<< HEAD
-    // Escrow & Travel Booking
-    Route::post('/travel-plans/{travelPlan}/attach-travel', [TravelPlanController::class, 'attachTravel'])->name('travel-plans.attach-travel');
-    Route::get('/travel-plans/{travelPlan}/checkout', [TravelPlanController::class, 'checkout'])->name('travel-plans.checkout');
-    Route::post('/travel-plans/{travelPlan}/process-checkout', [TravelPlanController::class, 'processCheckout'])->name('travel-plans.process-checkout');
-    Route::get('/travel-plans/{travelPlan}/receipt', [TravelPlanController::class, 'receipt'])->name('travel-plans.receipt');
-
     // Jadwal Perjalanan (Schedules / Itinerary)
     Route::post('/travel-plans/{travelPlan}/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
     Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
-
-=======
-    // Schedules / Itinerary Harian
-    Route::post('/travel-plans/{travelPlan}/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
-    Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
-
-
->>>>>>> 2b8a5de4b1fb5421787a20f79da6ed6a661a6750
     // Admin routes
     Route::prefix('admin')
         ->name('admin.')

@@ -57,7 +57,6 @@ class DatabaseSeeder extends Seeder
 
         /*
         |--------------------------------------------------------------------------
-<<<<<<< HEAD
         | 3. Seed Mitra Agen Travel & User Akun Travel
         |--------------------------------------------------------------------------
         */
@@ -93,13 +92,6 @@ class DatabaseSeeder extends Seeder
         $travels = [
             [
                 'user_id'     => $userNusa->id ?? null,
-=======
-        | 3. Seed Mitra Agen Travel & Tour
-        |--------------------------------------------------------------------------
-        */
-        $travels = [
-            [
->>>>>>> 2b8a5de4b1fb5421787a20f79da6ed6a661a6750
                 'nama_travel' => 'Nusa Horizon Tour & Travel',
                 'slug'        => 'nusa-horizon-tour-travel',
                 'layanan'     => 'Paket Tur Lengkap, Driver & Tiket Masuk',
@@ -111,10 +103,7 @@ class DatabaseSeeder extends Seeder
                 'gambar'      => 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80',
             ],
             [
-<<<<<<< HEAD
                 'user_id'     => $userJava->id ?? null,
-=======
->>>>>>> 2b8a5de4b1fb5421787a20f79da6ed6a661a6750
                 'nama_travel' => 'Java Explorer Trans & Travel',
                 'slug'        => 'java-explorer-trans-travel',
                 'layanan'     => 'Open Trip, Bus Pariwisata & Tour Guide',
@@ -126,10 +115,7 @@ class DatabaseSeeder extends Seeder
                 'gambar'      => 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=800&q=80',
             ],
             [
-<<<<<<< HEAD
                 'user_id'     => $userPara->id ?? null,
-=======
->>>>>>> 2b8a5de4b1fb5421787a20f79da6ed6a661a6750
                 'nama_travel' => 'Parahyangan Heritage Tour',
                 'slug'        => 'parahyangan-heritage-tour',
                 'layanan'     => 'City Tour & Wisata Budaya/Kuliner',
@@ -140,17 +126,6 @@ class DatabaseSeeder extends Seeder
                 'kontak'      => '0857-1122-3344',
                 'gambar'      => 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80',
             ],
-<<<<<<< HEAD
-        ];
-
-        if (Schema::hasTable('travels')) {
-            foreach ($travels as $t) {
-                Travel::updateOrCreate(
-                    ['slug' => $t['slug']],
-                    $t
-                );
-            }
-=======
             [
                 'nama_travel' => 'Nusantara Express Travel',
                 'slug'        => 'nusantara-express-travel',
@@ -164,12 +139,13 @@ class DatabaseSeeder extends Seeder
             ],
         ];
 
-        foreach ($travels as $t) {
-            Travel::firstOrCreate(
-                ['slug' => $t['slug']],
-                $t
-            );
->>>>>>> 2b8a5de4b1fb5421787a20f79da6ed6a661a6750
+        if (Schema::hasTable('travels')) {
+            foreach ($travels as $t) {
+                Travel::updateOrCreate(
+                    ['slug' => $t['slug']],
+                    $t
+                );
+            }
         }
 
         /*
