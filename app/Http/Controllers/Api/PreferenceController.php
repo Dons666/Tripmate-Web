@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers\Api;
 
@@ -13,9 +13,10 @@ class PreferenceController extends Controller
      * GET /api/preferences
      * Ambil preference user yang sedang login.
      */
-    public function show()
+    public function show(Request $request)
     {
-        $pref = UserPreference::where('user_id', Auth::id())->first();
+        $userId = $request->user()?->id ?? Auth::id();
+        $pref = UserPreference::where('user_id', $userId)->first();
 
         if (!$pref) {
             return response()->json(['preference' => null]);
@@ -45,8 +46,10 @@ class PreferenceController extends Controller
             'hidden_gem'      => ['boolean'],
         ]);
 
+        $userId = $request->user()?->id ?? Auth::id();
+
         $pref = UserPreference::updateOrCreate(
-            ['user_id' => Auth::id()],
+            ['user_id' => $userId],
             [
                 'kota_preferensi' => $validated['kota_preferensi'],
                 'minat_wisata'    => $validated['minat_wisata'],

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers\Api;
 
@@ -52,9 +52,11 @@ class RatingController extends Controller
             'komentar'    => ['nullable', 'string', 'max:500'],
         ]);
 
+        $userId = $request->user()?->id ?? Auth::id();
+
         $rating = Rating::updateOrCreate(
             [
-                'user_id'      => Auth::id(),
+                'user_id'      => $userId,
                 'destinasi_id' => $id,
             ],
             [
@@ -81,9 +83,10 @@ class RatingController extends Controller
      * GET /api/ratings/my
      * Semua rating yang pernah diberikan user yang sedang login.
      */
-    public function my()
+    public function my(Request $request)
     {
-        $ratings = Rating::where('user_id', Auth::id())
+        $userId = $request->user()?->id ?? Auth::id();
+        $ratings = Rating::where('user_id', $userId)
             ->with('destinasi:id,nama_destinasi')
             ->latest()
             ->get()
