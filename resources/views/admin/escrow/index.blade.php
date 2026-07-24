@@ -11,8 +11,8 @@
         .sidebar { width: 260px; background: linear-gradient(180deg, #1f2937 0%, #111827 100%); color: #fff; padding: 24px 16px; display: flex; flex-direction: column; gap: 20px; }
         .brand { font-size: 20px; font-weight: 700; padding: 8px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
         .menu { display: flex; flex-direction: column; gap: 8px; }
-        .menu a { padding: 11px 12px; border-radius: 8px; color: #d1d5db; text-decoration: none; font-size: 14px; transition: all 0.2s ease; }
-        .menu a:hover, .menu a.active { background: rgba(255, 255, 255, 0.12); color: #fff; }
+        .menu a, .menu button { width: 100%; text-align: left; padding: 11px 12px; border-radius: 8px; border: none; background: transparent; color: #d1d5db; text-decoration: none; font-size: 14px; cursor: pointer; transition: all 0.2s ease; }
+        .menu a:hover, .menu button:hover, .menu a.active { background: rgba(255, 255, 255, 0.12); color: #fff; }
         .content { flex: 1; padding: 28px; }
         .card { background: #fff; border-radius: 16px; padding: 24px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin-bottom: 24px; }
         .stats-grid { display: grid; grid-cols: 1fr; gap: 16px; margin-bottom: 24px; }
@@ -32,19 +32,7 @@
 <body>
     <div class="layout">
         <!-- SIDEBAR -->
-        <aside class="sidebar">
-            <div class="brand">TripMate Admin</div>
-            <nav class="menu">
-                <a href="{{ route('admin.dashboard') }}">📊 Dashboard Utama</a>
-                <a href="{{ route('admin.places.index') }}">📍 Kelola Tempat</a>
-                <a href="{{ route('admin.penyedia-travel.index') }}">🚌 Penyedia Travel</a>
-                <a href="{{ route('admin.escrow.index') }}" class="active">💸 Escrow & Payout</a>
-                <a href="{{ route('admin.users.index') }}">👥 Pengguna</a>
-                <a href="{{ route('admin.comments.index') }}">💬 AI Moderasi Komentar</a>
-                <a href="{{ route('admin.appeals.index') }}">📩 Banding Akun</a>
-                <a href="{{ route('home') }}" style="margin-top: auto; background: #dc2626; color: white;">← Kembali ke Web Utama</a>
-            </nav>
-        </aside>
+        @include('admin.partials.sidebar')
 
         <!-- CONTENT -->
         <main class="content">

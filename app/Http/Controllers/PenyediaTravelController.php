@@ -35,7 +35,7 @@ class PenyediaTravelController extends Controller
      */
     public function show(\App\Models\Travel $travel)
     {
-        $travel->load(['destinasis', 'armada']);
+        $travel->load(['destinasis', 'armada', 'user']);
         return view('penyedia_travel.show', compact('travel'));
     }
 

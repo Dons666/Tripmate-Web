@@ -14,39 +14,7 @@
 <body class="bg-gray-50 font-sans">
 
     <!-- Navbar -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex-shrink-0 flex items-center">
-                    <a href="{{ route('home') }}" class="text-2xl font-bold tracking-tight">
-                        <span class="text-sky-600">TripMate</span>
-                    </a>
-                </div>
-                <div class="hidden md:flex space-x-2">
-                    <a href="{{ route('home') }}" class="text-sky-600 font-medium px-4 py-2 rounded-lg bg-sky-50 transition">Home</a>
-                    <a href="{{ route('travel-plans.index') }}" class="text-gray-500 hover:text-gray-900 hover:bg-gray-100 font-medium text-sm px-4 py-2 rounded-lg transition">Rencana</a>
-                    <a href="{{ route('bookmarks.index') }}" class="text-gray-500 hover:text-gray-900 hover:bg-gray-100 font-medium text-sm px-4 py-2 rounded-lg transition">Bookmarks</a>
-                </div>
-                <div class="flex items-center space-x-4">
-                    @auth
-                        <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 hover:opacity-80 transition">
-                            @if(Auth::user()->avatar)
-                                <img src="{{ asset('storage/' . Auth::user()->avatar) }}" alt="Avatar" class="w-8 h-8 rounded-full object-cover border-2 border-sky-100">
-                            @else
-                                <div class="w-8 h-8 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-xs font-bold">
-                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                                </div>
-                            @endif
-                            <span class="text-sm font-medium text-gray-700 hidden sm:inline">{{ Auth::user()->name }}</span>
-                        </a>
-                    @else
-                        <a href="{{ route('login') }}" class="text-sm text-gray-700 hover:text-sky-600">Login</a>
-                        <a href="{{ route('register') }}" class="bg-sky-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-sky-600 active:scale-95 transition">Daftar</a>
-                    @endauth
-                </div>
-            </div>
-        </div>
-    </nav>
+    @include('layouts.navigation')
 
     <!-- Hero Section & Search Box -->
 <section class="relative h-[650px] overflow-hidden">
@@ -352,23 +320,31 @@ document.addEventListener('DOMContentLoaded', function() {
         @if(isset($penyediaTravels) && count($penyediaTravels) > 0)
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($penyediaTravels as $travel)
+                    @php
+                        $providerUser = \App\Models\User::where('email', $travel->email)->first();
+                        $targetPackage = $providerUser ? \App\Models\Travel::where('user_id', $providerUser->id)->first() : null;
+                        if (!$targetPackage) {
+                            $targetPackage = \App\Models\Travel::where('nama_travel', 'like', "%{$travel->nama_travel}%")->first();
+                        }
+                        $detailUrl = $targetPackage ? route('penyedia-travel.show', $targetPackage->id) : route('penyedia-travel.index', ['search' => $travel->nama_travel]);
+                    @endphp
                     <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
                         <div class="space-y-4">
                             <!-- Top Info Header -->
                             <div class="flex items-start justify-between gap-3 pb-4 border-b border-slate-100">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-white flex items-center justify-center font-black text-xl shadow-md shrink-0">
+                                <a href="{{ $detailUrl }}" class="flex items-center gap-3 min-w-0 group/link">
+                                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-white flex items-center justify-center font-black text-xl shadow-md shrink-0 group-hover/link:scale-105 transition-transform">
                                         🚌
                                     </div>
                                     <div class="min-w-0">
-                                        <h3 class="font-extrabold text-slate-900 text-base leading-snug group-hover:text-sky-600 transition-colors truncate">
-                                            {{ $travel->nama_travel }}
+                                        <h3 class="font-extrabold text-slate-900 text-base leading-snug group-hover/link:text-sky-600 transition-colors truncate">
+                                            {{ $travel->nama_travel }} &rarr;
                                         </h3>
                                         <p class="text-slate-500 text-xs font-medium truncate mt-0.5">
                                             📍 {{ $travel->kota_asal_travel ?? 'Kota Terdaftar' }}
                                         </p>
                                     </div>
-                                </div>
+                                </a>
                                 <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-lg border border-emerald-200 shrink-0">
                                     ✓ Verified
                                 </span>
@@ -409,7 +385,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                                     $rawItem = trim($qtyMatches[2]);
                                                 }
                                             @endphp
-                                            <div class="p-2.5 rounded-2xl bg-slate-900 text-white flex items-center justify-between gap-2 shadow-sm">
+                                            <a href="{{ $detailUrl }}" class="p-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white flex items-center justify-between gap-2 shadow-sm transition block">
                                                 <div class="flex items-center gap-2.5 min-w-0">
                                                     @if($armadaPhoto)
                                                         <img src="{{ asset('storage/' . $armadaPhoto) }}" alt="{{ $rawItem }}" class="w-9 h-9 object-cover rounded-xl border border-slate-700 shrink-0">
@@ -437,7 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                                         {{ $extractedPrice }} / hari
                                                     </span>
                                                 @endif
-                                            </div>
+                                            </a>
                                         @endforeach
                                     </div>
                                 @else
@@ -446,11 +422,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         </div>
 
-                        <!-- Card Footer WhatsApp CTA -->
-                        <div class="pt-4 border-t border-slate-100 mt-5 flex items-center justify-between gap-3">
-                            <span class="text-[11px] font-bold text-slate-500 truncate">
-                                📅 {{ Str::limit($travel->jadwal_ketersediaan ?? 'Setiap Hari', 18) }}
-                            </span>
+                        <!-- Card Footer WhatsApp CTA & Detail Link -->
+                        <div class="pt-4 border-t border-slate-100 mt-5 flex items-center justify-between gap-2">
+                            <a href="{{ $detailUrl }}" class="px-3.5 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-extrabold rounded-xl transition border border-sky-200 shadow-sm flex items-center gap-1 shrink-0">
+                                <span>👁️ Detail Travel</span>
+                            </a>
                             @php
                                 $cleanPhone = preg_replace('/[^0-9]/', '', $travel->nomor_hp_pemilik_travel ?? '');
                                 if (str_starts_with($cleanPhone, '0')) {
@@ -459,7 +435,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 $waUrl = !empty($cleanPhone) ? "https://wa.me/{$cleanPhone}?text=" . urlencode("Halo {$travel->nama_travel}, saya menemukan travel Anda di TripMate dan ingin menanyakan armada & reservasi.") : '#';
                             @endphp
                             @if(!empty($cleanPhone))
-                                <a href="{{ $waUrl }}" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold rounded-xl transition shadow-sm flex items-center gap-1.5 shrink-0">
+                                <a href="{{ $waUrl }}" target="_blank" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold rounded-xl transition shadow-sm flex items-center gap-1 shrink-0">
                                     <span>💬 Hubungi WA</span>
                                 </a>
                             @endif

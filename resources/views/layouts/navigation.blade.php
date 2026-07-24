@@ -1,11 +1,36 @@
 <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
-            <a href="{{ (Auth::check() && Auth::user()->role === 'travel') ? route('travel.dashboard') : route('home') }}" class="text-2xl font-bold tracking-tight text-sky-600">
-                TripMate
+            <a href="{{ (Auth::check() && Auth::user()->role === 'admin') ? route('admin.dashboard') : ((Auth::check() && Auth::user()->role === 'travel') ? route('travel.dashboard') : route('home')) }}" class="text-2xl font-bold tracking-tight text-sky-600 flex items-center gap-2">
+                <span>TripMate</span>
+                @if(Auth::check() && Auth::user()->role === 'admin')
+                    <span class="text-[10px] font-black uppercase tracking-wider bg-slate-900 text-white px-2 py-0.5 rounded-md">ADMIN</span>
+                @elseif(Auth::check() && Auth::user()->role === 'travel')
+                    <span class="text-[10px] font-black uppercase tracking-wider bg-sky-100 text-sky-700 px-2 py-0.5 rounded-md">PARTNER</span>
+                @endif
             </a>
 
-            @if(!Auth::check() || Auth::user()->role !== 'travel')
+            @if(Auth::check() && Auth::user()->role === 'admin')
+                <!-- ADMIN EXCLUSIVE NAV LINKS -->
+                <div class="hidden md:flex items-center gap-1">
+                    <a href="{{ route('admin.dashboard') }}" class="px-3.5 py-2 rounded-lg text-xs font-extrabold text-slate-700 hover:text-sky-600 hover:bg-sky-50 transition {{ request()->routeIs('admin.dashboard') ? 'bg-sky-50 text-sky-600 font-black' : '' }}">
+                        📊 Dashboard
+                    </a>
+                    <a href="{{ route('admin.places.index') }}" class="px-3.5 py-2 rounded-lg text-xs font-extrabold text-slate-700 hover:text-sky-600 hover:bg-sky-50 transition {{ request()->routeIs('admin.places.*') ? 'bg-sky-50 text-sky-600 font-black' : '' }}">
+                        📍 Kelola Tempat
+                    </a>
+                    <a href="{{ route('admin.penyedia-travel.index') }}" class="px-3.5 py-2 rounded-lg text-xs font-extrabold text-slate-700 hover:text-sky-600 hover:bg-sky-50 transition {{ request()->routeIs('admin.penyedia-travel.*') ? 'bg-sky-50 text-sky-600 font-black' : '' }}">
+                        🚌 Penyedia Travel
+                    </a>
+                    <a href="{{ route('admin.escrow.index') }}" class="px-3.5 py-2 rounded-lg text-xs font-extrabold text-slate-700 hover:text-sky-600 hover:bg-sky-50 transition {{ request()->routeIs('admin.escrow.*') ? 'bg-sky-50 text-sky-600 font-black' : '' }}">
+                        🛡️ Escrow
+                    </a>
+                    <a href="{{ route('admin.users.index') }}" class="px-3.5 py-2 rounded-lg text-xs font-extrabold text-slate-700 hover:text-sky-600 hover:bg-sky-50 transition {{ request()->routeIs('admin.users.*') ? 'bg-sky-50 text-sky-600 font-black' : '' }}">
+                        👥 Users
+                    </a>
+                </div>
+            @elseif(!Auth::check() || Auth::user()->role !== 'travel')
+                <!-- USER NAV LINKS -->
                 <div class="hidden md:flex items-center gap-1">
                     <a href="{{ route('home') }}" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-sky-600 hover:bg-sky-50 transition {{ request()->routeIs('home') ? 'nav-active' : '' }}">
                         Home
@@ -23,7 +48,7 @@
             @endif
 
             <div class="flex items-center gap-3">
-                @if(!Auth::check() || Auth::user()->role !== 'travel')
+                @if(!Auth::check() || (Auth::user()->role !== 'travel' && Auth::user()->role !== 'admin'))
                     <a href="javascript:history.back()" class="text-sm text-gray-500 hover:text-sky-600 font-medium flex items-center gap-1 transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                         <span class="hidden sm:inline">Kembali</span>
@@ -74,9 +99,13 @@
                         </div>
                     </div>
 
-                    @if(Auth::user()->role === 'admin')
-                        <a href="{{ route('admin.dashboard') }}" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                            ⚙️ Admin Panel
+                    @if(Auth::check() && Auth::user()->role === 'admin')
+                        <a href="{{ route('admin.dashboard') }}" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-sm">
+                            ⚙️ Admin Dashboard
+                        </a>
+                    @elseif(Auth::check() && Auth::user()->role === 'travel')
+                        <a href="{{ route('travel.dashboard') }}" class="px-3.5 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-sm">
+                            🚌 Partner Dashboard
                         </a>
                     @endif
 

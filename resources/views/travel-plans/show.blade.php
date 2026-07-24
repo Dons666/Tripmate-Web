@@ -48,7 +48,10 @@
                         <span class="text-xs uppercase font-extrabold tracking-widest text-slate-400">Mode Perjalanan</span>
                         <h3 class="text-xl font-extrabold text-slate-900 mt-0.5">
                             @if($travelPlan->travel)
-                                🚌 Didampingi Agen Travel: <span class="text-sky-600">{{ $travelPlan->travel->nama_travel }}</span>
+                                🚌 Didampingi Agen Travel: 
+                                <a href="{{ route('penyedia-travel.show', $travelPlan->travel->id) }}" class="text-sky-600 hover:text-sky-800 hover:underline inline-flex items-center gap-1">
+                                    {{ $travelPlan->travel->nama_travel }} &rarr;
+                                </a>
                             @else
                                 🚶 Perencanaan Mandiri (Tanpa Travel)
                             @endif
@@ -56,11 +59,15 @@
                     </div>
 
                     <!-- ACTION BUTTONS -->
-                    <div>
+                    <div class="flex flex-wrap items-center gap-3">
                         @if($travelPlan->travel)
+                            <a href="{{ route('penyedia-travel.show', $travelPlan->travel->id) }}" class="px-4 py-2.5 bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 font-extrabold text-xs rounded-2xl transition flex items-center gap-1.5 shadow-sm">
+                                👁️ Lihat Detail Paket Travel
+                            </a>
+
                             @if(!$travelPlan->is_checkout)
-                                <a href="{{ route('travel-plans.checkout', $travelPlan) }}" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-2xl shadow-lg transition flex items-center gap-2">
-                                    🛒 Checkout & Bayar Paket Travel (Rp {{ number_format($travelPlan->travel->harga_paket, 0, ',', '.') }})
+                                <a href="{{ route('travel-plans.checkout', $travelPlan) }}" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-2xl shadow-lg transition flex items-center gap-1.5">
+                                    🛒 Checkout & Bayar Paket (Rp {{ number_format($travelPlan->travel->harga_paket, 0, ',', '.') }})
                                 </a>
                             @else
                                 <span class="px-4 py-2 bg-emerald-100 text-emerald-800 rounded-xl text-xs font-extrabold inline-flex items-center gap-1.5">
@@ -68,9 +75,23 @@
                                 </span>
                             @endif
                         @else
-                            <span class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5">
-                                ℹ️ Perencanaan Mandiri (Tanpa Pembayaran)
-                            </span>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <form action="{{ route('travel-plans.attach-travel', $travelPlan) }}" method="POST" class="flex items-center gap-2">
+                                    @csrf
+                                    <select name="travel_id" class="rounded-2xl border-slate-300 text-xs font-bold focus:ring-sky-500 focus:border-sky-500 py-2">
+                                        <option value="">-- Pilih Mitra Travel --</option>
+                                        @foreach($travels as $t)
+                                            <option value="{{ $t->id }}">{{ $t->nama_travel }} (Rp {{ number_format($t->harga_paket, 0, ',', '.') }})</option>
+                                        @endforeach
+                                    </select>
+                                    <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-extrabold rounded-2xl shadow transition">
+                                        Pasang Travel
+                                    </button>
+                                </form>
+                                <a href="{{ route('penyedia-travel.index') }}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold rounded-2xl transition">
+                                    Katalog Travel
+                                </a>
+                            </div>
                         @endif
                     </div>
                 </div>

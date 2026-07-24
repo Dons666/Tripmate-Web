@@ -21,6 +21,14 @@ class HomeController extends Controller
 
     public function index(Request $request)
     {
+        if (Auth::check() && Auth::user()->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if (Auth::check() && Auth::user()->role === 'travel') {
+            return redirect()->route('travel.dashboard');
+        }
+
         // Ambil kategori
         $kategoris = Kategori::all();
 

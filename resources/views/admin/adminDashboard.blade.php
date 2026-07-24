@@ -1,444 +1,178 @@
-{{-- 
-|--------------------------------------------------------------------------
-| HALAMAN ADMIN: Dashboard Utama (Home Admin)
-|--------------------------------------------------------------------------
-| FUNGSI & KEGUNAAN:
-| 1. Menampilkan ringkasan statistik total data destinasi, kuliner, dan penginapan.
-| 2. Menampilkan Kotak Notifikasi & Pengajuan Banding Akun dari member yang dinonaktifkan.
-| 3. Menyediakan navigasi sidebar untuk mengelola seluruh fitur Admin Panel.
---}}
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Admin Dashboard - Ringkasan Eksekutif Sistem</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; color: #1f2937; }
+        .layout { min-height: 100vh; display: flex; }
+        .content { flex: 1; padding: 28px; }
+        .top-info { display: flex; justify-content: flex-end; margin-bottom: 12px; color: #6b7280; font-weight: 600; font-size: 13px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .admin-header h1 { color: #111827; font-size: 26px; font-weight: 800; }
+        .admin-title { color: #e74c3c; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f4f6f9;
-            color: #1f2937;
-        }
+        /* Grid Cards */
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 28px; }
+        .summary-card { background: #fff; border-radius: 16px; padding: 22px; border: 1px solid #e5e7eb; box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: transform 0.2s; }
+        .summary-card:hover { transform: translateY(-2px); }
+        .summary-card-title { font-size: 12px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; items-center; justify-content: space-between; }
+        .summary-card-num { font-size: 28px; font-weight: 800; color: #111827; margin-bottom: 6px; }
+        .summary-card-sub { font-size: 12px; color: #4b5563; font-weight: 500; }
 
-        .layout {
-            min-height: 100vh;
-            display: flex;
-        }
+        .card-emerald { border-left: 5px solid #10b981; }
+        .card-sky { border-left: 5px solid #0284c7; }
+        .card-amber { border-left: 5px solid #f59e0b; }
+        .card-rose { border-left: 5px solid #f43f5e; }
 
-        .sidebar {
-            width: 250px;
-            background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
-            color: #fff;
-            padding: 24px 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+        /* Quick Action Bar */
+        .quick-actions { background: #1e293b; color: #fff; border-radius: 16px; padding: 20px; margin-bottom: 28px; }
+        .quick-actions h3 { font-size: 14px; font-weight: 700; text-transform: uppercase; tracking-wider; margin-bottom: 14px; color: #94a3b8; }
+        .action-btns { display: flex; flex-wrap: wrap; gap: 10px; }
+        .action-btn { background: rgba(255, 255, 255, 0.1); color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; transition: background 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .action-btn:hover { background: rgba(255, 255, 255, 0.2); }
+        .action-btn .badge-count { background: #ef4444; color: white; padding: 2px 7px; border-radius: 99px; font-size: 11px; }
 
-        .brand {
-            font-size: 20px;
-            font-weight: 700;
-            padding: 8px 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
+        /* Tables & Content Block */
+        .section-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px; margin-bottom: 28px; }
+        .section-card { background: #fff; border-radius: 16px; padding: 24px; border: 1px solid #e5e7eb; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .section-title { font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        th { background: #f8fafc; padding: 10px 12px; color: #475569; font-weight: 700; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
+        
+        .badge-status { padding: 3px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; display: inline-block; }
+        .status-paid { background: #ecfdf5; color: #047857; }
+        .status-pending { background: #fef3c7; color: #b45309; }
+        .status-released { background: #e0e7ff; color: #3730a3; }
 
-        .menu {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .menu a,
-        .menu button {
-            width: 100%;
-            text-align: left;
-            padding: 11px 12px;
-            border-radius: 8px;
-            border: none;
-            background: transparent;
-            color: #d1d5db;
-            text-decoration: none;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .menu a:hover,
-        .menu button:hover,
-        .menu .active {
-            background: rgba(255, 255, 255, 0.12);
-            color: #fff;
-        }
-
-        .content {
-            flex: 1;
-            padding: 28px;
-        }
-
-        .top-info {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 12px;
-            color: #6b7280;
-            font-weight: 600;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 26px;
-        }
-
-        .admin-header h1 {
-            color: #111827;
-            font-size: 28px;
-        }
-
-        .admin-title {
-            color: #e74c3c;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .summary-note {
-            color: #6b7280;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        .notification-panel {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
-            padding: 20px;
-            margin-bottom: 24px;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
-        }
-
-        .notification-panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .notification-panel-header h2 {
-            color: #111827;
-            font-size: 18px;
-            margin-bottom: 4px;
-        }
-
-        .notification-panel-header p {
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        .notification-panel-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .notification-badge {
-            background: #111827;
-            color: #fff;
-            border-radius: 999px;
-            padding: 6px 12px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .notification-mark-read {
-            border: 1px solid #d1d5db;
-            background: #fff;
-            color: #111827;
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .notification-list {
-            display: grid;
-            gap: 12px;
-        }
-
-        .notification-item {
-            border-radius: 12px;
-            padding: 14px 16px;
-            border: 1px solid #e5e7eb;
-            background: #f9fafb;
-        }
-
-        .notification-item.is-unread {
-            background: #eff6ff;
-            border-color: #bfdbfe;
-        }
-
-        .notification-item-top {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 8px;
-            font-size: 13px;
-        }
-
-        .notification-item p {
-            color: #374151;
-            font-size: 14px;
-            line-height: 1.55;
-            margin-bottom: 8px;
-        }
-
-        .notification-link {
-            color: #b91c1c;
-            font-weight: 700;
-            text-decoration: none;
-        }
-
-        .notification-empty {
-            color: #6b7280;
-            background: #f9fafb;
-            border: 1px dashed #d1d5db;
-            padding: 14px 16px;
-            border-radius: 12px;
-        }
-
-        .notification-warning {
-            border-left: 4px solid #f59e0b;
-        }
-
-        .notification-danger {
-            border-left: 4px solid #dc2626;
-        }
-
-        .notification-info {
-            border-left: 4px solid #2563eb;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-        }
-
-        .section-block {
-            margin-top: 28px;
-        }
-
-        .section-heading {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .section-heading h2 {
-            font-size: 20px;
-            color: #111827;
-        }
-
-        .section-heading p {
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        .best-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 16px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-            border-left: 5px solid #e74c3c;
-        }
-
-        .stat-card h3 {
-            color: #6b7280;
-            font-size: 13px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-card .number {
-            font-size: 34px;
-            font-weight: 700;
-            color: #e74c3c;
-            line-height: 1;
-        }
-
-        .best-card {
-            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-            padding: 22px;
-            border-radius: 14px;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-            border: 1px solid #e5e7eb;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .best-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 12px;
-        }
-
-        .best-card h3 {
-            font-size: 18px;
-            color: #111827;
-            line-height: 1.35;
-        }
-
-        .place-type {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .type-destination {
-            background: #dbeafe;
-            color: #1d4ed8;
-        }
-
-        .type-culinary {
-            background: #dcfce7;
-            color: #15803d;
-        }
-
-        .type-stay {
-            background: #fef3c7;
-            color: #b45309;
-        }
-
-        .best-rating {
-            font-size: 28px;
-            font-weight: 800;
-            color: #e74c3c;
-        }
-
-        .best-meta {
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        .best-link {
-            margin-top: auto;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 14px;
-            border-radius: 10px;
-            background: #111827;
-            color: #fff;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .best-link:hover {
-            background: #000;
-        }
-
-        .empty-state {
-            background: #fff;
-            border: 1px dashed #d1d5db;
-            border-radius: 14px;
-            padding: 20px;
-            color: #6b7280;
-        }
+        .btn-link { color: #0284c7; text-decoration: none; font-weight: 700; font-size: 12px; }
+        .btn-link:hover { text-decoration: underline; }
 
         @media (max-width: 980px) {
-            .layout {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: 100%;
-            }
-
-            .content {
-                padding: 16px;
-            }
+            .layout { flex-direction: column; }
+            .content { padding: 16px; }
+            .section-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div class="layout">
-        <aside class="sidebar">
-            <div class="brand">Admin Panel</div>
-            <div class="menu">
-                <a href="{{ route('admin.dashboard') }}" class="active">Home</a>
-                <a href="{{ route('admin.places.index') }}">Manage Tempat</a>
-                <a href="{{ route('admin.penyedia-travel.index') }}">🚌 Kelola Travel</a>
-                <a href="{{ route('admin.escrow.index') }}">💸 Escrow & Verifikasi Pembayaran</a>
-                <a href="{{ route('admin.comments.index') }}">Manage Komentar</a>
-                <a href="{{ route('admin.users.index') }}">Manage Member</a>
-                <a href="{{ route('admin.escrow.index') }}">Escrow Pembayaran</a>
-                <a href="{{ route('admin.appeals.index') }}">Kotak Banding Akun</a>
-                <a href="{{ route('admin.logs') }}">Admin Logs</a>
-                <form action="{{ route('logout') }}" method="POST" onsubmit="return confirm('Apakah yakin ingin logout?')">
-                    @csrf
-                    <button type="submit">Logout</button>
-                </form>
-            </div>
-        </aside>
+        @include('admin.partials.sidebar')
 
         <main class="content">
-            <div class="top-info">{{ Auth::user()->username }}</div>
-            <div class="container">
-                @if(session('success'))
-                    <div class="alert-success">
-                        {{ session('success') }}
-                    </div>
-                @endif
+            <div class="top-info">
+                <span>Halo, <strong>{{ Auth::user()->name ?? Auth::user()->username }}</strong> (Administrator)</span>
+            </div>
 
+            <div class="container">
+                <!-- Header -->
                 <div class="admin-header">
                     <div>
-                        <span class="admin-title">Administrator</span>
-                        <h1>Dashboard</h1>
+                        <span class="admin-title">Executive Summary Dashboard</span>
+                        <h1>Ringkasan Seluruh Aktivitas Admin</h1>
+                    </div>
+                    <span style="background: #dcfce7; color: #166534; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 99px; border: 1px solid #bbf7d0;">
+                        🟢 Sistem Berjalan Normal
+                    </span>
+                </div>
+
+                <!-- Quick Action Bar -->
+                <div class="quick-actions">
+                    <h3>⚡ Aksi Cepat Administrasi</h3>
+                    <div class="action-btns">
+                        <a href="{{ route('admin.penyedia-travel.index') }}" class="action-btn">
+                            🚌 Persetujuan Mitra Travel
+                            @if($pendingTravelCount > 0)
+                                <span class="badge-count">{{ $pendingTravelCount }}</span>
+                            @endif
+                        </a>
+                        <a href="{{ route('admin.escrow.index') }}" class="action-btn">
+                            💸 Holding Escrow & Payout
+                            @if($pendingEscrowCount > 0)
+                                <span class="badge-count" style="background: #0284c7;">{{ $pendingEscrowCount }}</span>
+                            @endif
+                        </a>
+                        <a href="{{ route('admin.appeals.index') }}" class="action-btn">
+                            📩 Banding Akun Member
+                            @if($unreadNotificationCount > 0)
+                                <span class="badge-count">{{ $unreadNotificationCount }}</span>
+                            @endif
+                        </a>
+                        <a href="{{ route('admin.places.index') }}" class="action-btn">
+                            📍 Kelola Tempat Wisata
+                        </a>
+                        <a href="{{ route('admin.comments.index') }}" class="action-btn">
+                            💬 AI Moderasi Komentar
+                        </a>
                     </div>
                 </div>
 
-                <p class="summary-note">Ringkasan total data pada sistem.</p>
+                <!-- Ringkasan Statistik Utama Cards -->
+                <div class="summary-grid">
+                    <!-- Escrow Holding -->
+                    <div class="summary-card card-emerald">
+                        <div class="summary-card-title">
+                            <span>💸 Escrow Holding Funds</span>
+                            <span>🔒</span>
+                        </div>
+                        <div class="summary-card-num">
+                            Rp {{ number_format($totalEscrowHolding, 0, ',', '.') }}
+                        </div>
+                        <div class="summary-card-sub">
+                            Total {{ $pendingEscrowCount }} transaksi holding tertahan
+                        </div>
+                    </div>
 
+                    <!-- Escrow Dicairkan -->
+                    <div class="summary-card card-sky">
+                        <div class="summary-card-title">
+                            <span>🚀 Escrow Dicairkan</span>
+                            <span>✅</span>
+                        </div>
+                        <div class="summary-card-num">
+                            Rp {{ number_format($totalEscrowReleased, 0, ',', '.') }}
+                        </div>
+                        <div class="summary-card-sub">
+                            Dana payout sukses diteruskan ke agen travel
+                        </div>
+                    </div>
 
+                    <!-- Mitra Travel -->
+                    <div class="summary-card card-amber">
+                        <div class="summary-card-title">
+                            <span>🚌 Mitra Travel</span>
+                            <span>📋</span>
+                        </div>
+                        <div class="summary-card-num">
+                            {{ $travelCount }} Mitra
+                        </div>
+                        <div class="summary-card-sub">
+                            <strong style="color: #b45309;">{{ $pendingTravelCount }} Pending</strong> • {{ $approvedTravelCount }} Disetujui
+                        </div>
+                    </div>
 
+                    <!-- Pengguna & Member -->
+                    <div class="summary-card card-rose">
+                        <div class="summary-card-title">
+                            <span>👥 Akun Pengguna</span>
+                            <span>👤</span>
+                        </div>
+                        <div class="summary-card-num">
+                            {{ $userCount }} Member
+                        </div>
+                        <div class="summary-card-sub">
+                            {{ $activeUserCount }} Aktif • <span style="color: #e11d48;">{{ $deactivatedUserCount }} Nonaktif</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Box Pengajuan Banding -->
                 @include('partials.notification-box', [
                     'title' => 'Kotak Notifikasi & Pengajuan Banding Akun',
                     'description' => 'Pantau dan kelola pengajuan banding dari pengguna yang akunnya dinonaktifkan.',
@@ -448,60 +182,116 @@
                     'markAllReadRoute' => route('notifications.mark-all-read'),
                 ])
 
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3>Total Destinasi</h3>
-                        <div class="number">{{ $destinationCount }}</div>
+                <!-- Section Grid: Detail Aktivitas Terbaru -->
+                <div class="section-grid">
+                    <!-- Transaksi Travel Terbaru -->
+                    <div class="section-card">
+                        <div class="section-title">
+                            <span>📋 Transaksi Escrow Terbaru</span>
+                            <a href="{{ route('admin.escrow.index') }}" class="btn-link">Lihat Semua Escrow &rarr;</a>
+                        </div>
+                        @if($recentBookings->count() > 0)
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Pengguna</th>
+                                        <th>Paket Travel</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($recentBookings as $booking)
+                                        <tr>
+                                            <td>
+                                                <strong>{{ $booking->user->name ?? 'User' }}</strong><br>
+                                                <span style="font-size: 11px; color: #64748b;">{{ $booking->user->email ?? '-' }}</span>
+                                            </td>
+                                            <td><strong>Rp {{ number_format($booking->budget ?? 0, 0, ',', '.') }}</strong></td>
+                                            <td>
+                                                @if($booking->payment_status === 'escrow_held')
+                                                    <span class="badge-status status-paid">Escrow Held</span>
+                                                @elseif($booking->payment_status === 'payout_released')
+                                                    <span class="badge-status status-released">Released</span>
+                                                @elseif($booking->payment_status === 'pending_admin')
+                                                    <span class="badge-status status-pending">Pending Review</span>
+                                                @else
+                                                    <span class="badge-status status-pending">{{ ucfirst($booking->payment_status ?? 'unpaid') }}</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @else
+                            <div style="text-center: center; color: #64748b; font-size: 13px; padding: 20px 0;">Belum ada transaksi pemesanan travel.</div>
+                        @endif
                     </div>
-                    <div class="stat-card">
-                        <h3>Total Kuliner</h3>
-                        <div class="number">{{ $culinaryCount }}</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Total Penginapan</h3>
-                        <div class="number">{{ $stayCount }}</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Total Komentar</h3>
-                        <div class="number">{{ $commentCount }}</div>
+
+                    <!-- Permohonan Mitra Travel Pending -->
+                    <div class="section-card">
+                        <div class="section-title">
+                            <span>🚌 Mitra Travel Menunggu Review</span>
+                            <a href="{{ route('admin.penyedia-travel.index') }}" class="btn-link">Kelola Mitra &rarr;</a>
+                        </div>
+                        @if($recentPendingProviders->count() > 0)
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Nama Travel</th>
+                                        <th>Pemilik / Penanggungjawab</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($recentPendingProviders as $provider)
+                                        <tr>
+                                            <td>
+                                                <strong>{{ $provider->nama_travel }}</strong><br>
+                                                <span style="font-size: 11px; color: #64748b;">📍 {{ $provider->kota }}</span>
+                                            </td>
+                                            <td>
+                                                {{ $provider->nama_pemilik }}<br>
+                                                <span style="font-size: 11px; color: #64748b;">📱 {{ $provider->no_hp }}</span>
+                                            </td>
+                                            <td>
+                                                <a href="{{ route('admin.penyedia-travel.index') }}" class="btn-link" style="color: #0284c7;">Review Legalitas &rarr;</a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @else
+                            <div style="text-align: center; color: #64748b; font-size: 13px; padding: 20px 0;">Semua pendaftaran mitra travel telah diproses.</div>
+                        @endif
                     </div>
                 </div>
 
-                <div class="section-block">
-                    <div class="section-heading">
-                        <div>
-                            <h2>3 Tempat Terbaik</h2>
-                            <p>Gabungan destinasi, kuliner, dan penginapan dengan rating tertinggi.</p>
-                        </div>
+                <!-- 3 Tempat Terbaik -->
+                <div class="section-card">
+                    <div class="section-title">
+                        <span>🏆 3 Tempat Wisata / Kuliner Terbaik</span>
+                        <a href="{{ route('admin.places.index') }}" class="btn-link">Kelola Semua Tempat &rarr;</a>
                     </div>
 
                     @if($topPlaces->count() > 0)
-                        <div class="best-grid">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
                             @foreach($topPlaces as $place)
-                                <div class="best-card">
-                                    <div class="best-card-header">
-                                        <div>
-                                            <span class="place-type {{ $place['type_class'] }}">{{ $place['type'] }}</span>
-                                            <h3 style="margin-top: 10px;">{{ $place['name'] }}</h3>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div class="best-rating">* {{ number_format($place['rating'], 2) }}</div>
-                                        <div class="best-meta">{{ $place['comments_count'] }} komentar</div>
-                                    </div>
-
-                                    <a href="{{ $place['detail_url'] }}" class="best-link">Lihat Detail</a>
+                                <div style="background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                                    <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #0284c7;">{{ $place['type'] }}</span>
+                                    <h4 style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 6px 0;">{{ $place['name'] }}</h4>
+                                    <div style="font-size: 20px; font-weight: 900; color: #f59e0b;">★ {{ number_format($place['rating'], 2) }}</div>
+                                    <div style="font-size: 12px; color: #64748b; margin-top: 4px;">{{ $place['comments_count'] }} ulasan terdaftar</div>
                                 </div>
                             @endforeach
                         </div>
                     @else
-                        <div class="empty-state">Belum ada data rating untuk menampilkan tempat terbaik.</div>
+                        <div style="text-align: center; color: #64748b; font-size: 13px; padding: 20px 0;">Belum ada tempat dengan ulasan.</div>
                     @endif
                 </div>
+
             </div>
         </main>
     </div>
 </body>
 </html>
-                                                                                                                                                                

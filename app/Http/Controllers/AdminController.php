@@ -49,7 +49,22 @@ class AdminController extends Controller
         $destinationCount = Destinasi::where('tipe', 'wisata')->count();
         $culinaryCount = Destinasi::where('tipe', 'kuliner')->count();
         $stayCount = Destinasi::where('tipe', 'penginapan')->count();
+        $totalPlaces = $destinationCount + $culinaryCount + $stayCount;
         $commentCount = Rating::count();
+
+        // Escrow & Financial Metrics
+        $totalEscrowHolding = TravelPlan::where('payment_status', 'escrow_held')->sum('budget');
+        $totalEscrowReleased = TravelPlan::where('payment_status', 'payout_released')->sum('budget');
+        $pendingEscrowCount = TravelPlan::whereIn('payment_status', ['escrow_held', 'pending_admin'])->count();
+
+        // User & Partner Metrics
+        $userCount = User::count();
+        $activeUserCount = User::where('is_active', true)->count();
+        $deactivatedUserCount = User::where('is_active', false)->count();
+
+        $travelCount = PenyediaTravel::count();
+        $pendingTravelCount = PenyediaTravel::where('status', 'pending')->count();
+        $approvedTravelCount = PenyediaTravel::where('status', 'approved')->count();
 
         $topPlaces = Destinasi::withCount('ratings')
             ->withAvg('ratings', 'skor_rating')
@@ -88,14 +103,38 @@ class AdminController extends Controller
 
         $unreadNotificationCount = Appeal::where('is_read', false)->count();
 
+        // Recent Activity Summaries
+        $recentBookings = TravelPlan::with(['user', 'travel'])
+            ->whereNotNull('travel_id')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $recentPendingProviders = PenyediaTravel::where('status', 'pending')
+            ->latest()
+            ->take(5)
+            ->get();
+
         return view('admin.adminDashboard', [
             'destinationCount' => $destinationCount,
             'culinaryCount' => $culinaryCount,
             'stayCount' => $stayCount,
+            'totalPlaces' => $totalPlaces,
             'commentCount' => $commentCount,
+            'totalEscrowHolding' => $totalEscrowHolding,
+            'totalEscrowReleased' => $totalEscrowReleased,
+            'pendingEscrowCount' => $pendingEscrowCount,
+            'userCount' => $userCount,
+            'activeUserCount' => $activeUserCount,
+            'deactivatedUserCount' => $deactivatedUserCount,
+            'travelCount' => $travelCount,
+            'pendingTravelCount' => $pendingTravelCount,
+            'approvedTravelCount' => $approvedTravelCount,
             'topPlaces' => $topPlaces,
             'notifications' => $notifications,
             'unreadNotificationCount' => $unreadNotificationCount,
+            'recentBookings' => $recentBookings,
+            'recentPendingProviders' => $recentPendingProviders,
         ]);
     }
 
