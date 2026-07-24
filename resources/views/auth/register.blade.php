@@ -63,9 +63,18 @@
         </div>
 
         <!-- LOGIN -->
-        <div class="text-center bg-sky-50 rounded-xl p-4 border border-sky-100">
+        <div class="text-center bg-sky-50 rounded-xl p-4 border border-sky-100 mb-3">
             <span class="text-sm text-slate-500">Sudah punya akun?</span>
             <a href="{{ route('login') }}" class="font-bold text-sky-600 hover:text-sky-700 ml-1">Masuk Sekarang</a>
+        </div>
+
+        <!-- DAFTAR SEBAGAI TRAVEL -->
+        <div class="text-center bg-slate-50 hover:bg-sky-50/50 rounded-xl p-4 border border-slate-200 hover:border-sky-200 transition">
+            <span class="text-xs font-medium text-slate-500 block mb-1">Punya Usaha & Armada Travel?</span>
+            <a href="{{ route('penyedia-travel.create') }}" class="font-bold text-sky-600 hover:text-sky-700 text-sm inline-flex items-center gap-1.5">
+                <span>Daftar sebagai Penyedia Travel</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
         </div>
 
     </form>

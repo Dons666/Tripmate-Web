@@ -61,6 +61,11 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    public function isTravel(): bool
+    {
+        return $this->role === 'travel';
+    }
+
     public function getUsernameAttribute(): string
     {
         return (string) ($this->name ?? '');
@@ -88,5 +93,10 @@ class User extends Authenticatable
     public function travelPlans()
     {
         return $this->hasMany(TravelPlan::class);
+    }
+
+    public function armadas()
+    {
+        return $this->hasMany(Armada::class);
     }
 }

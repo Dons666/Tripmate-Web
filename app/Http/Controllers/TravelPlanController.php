@@ -8,6 +8,7 @@ use App\Models\Destinasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class TravelPlanController extends Controller
 {
@@ -27,6 +28,7 @@ class TravelPlanController extends Controller
             'budget'          => 'nullable|numeric|min:0',
             'status'          => 'nullable|string|in:Perencanaan Aktif,Sedang Berjalan,Selesai,Dibatalkan',
             'foto_sampul'     => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'travel_id'       => 'nullable|exists:travels,id',
         ]);
 
         $data = $request->except('_token');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Destinasi;
 use App\Models\Kategori;
+use App\Models\PenyediaTravel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\RecommendationService;
@@ -20,6 +21,14 @@ class HomeController extends Controller
 
     public function index(Request $request)
     {
+        if (Auth::check() && Auth::user()->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if (Auth::check() && Auth::user()->role === 'travel') {
+            return redirect()->route('travel.dashboard');
+        }
+
         // Ambil kategori
         $kategoris = Kategori::all();
 
@@ -227,13 +236,25 @@ $destinasiPopuler = $query
                 );
         }
 
+        $penyediaTravels = PenyediaTravel::where('status', 'approved')
+            ->latest()
+            ->take(6)
+            ->get();
+
+        $paketTravels = \App\Models\Travel::with('user', 'destinasis', 'armada')
+            ->latest()
+            ->take(6)
+            ->get();
+
         return view(
             'home',
             compact(
                 'kategoris',
                 'destinasiPopuler',
                 'recommendations',
-                'top3Bayesian'
+                'top3Bayesian',
+                'penyediaTravels',
+                'paketTravels'
             )
         );
     }

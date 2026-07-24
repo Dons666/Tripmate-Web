@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class ScheduleController extends Controller
 {
     /**
-     * Tambah jadwal baru ke travel plan.
+     * Tambahkan jadwal baru ke travel plan.
      */
     public function store(Request $request, TravelPlan $travelPlan)
     {
@@ -22,8 +22,8 @@ class ScheduleController extends Controller
             'judul'        => 'required|string|max:255',
             'tanggal'      => 'required|date',
             'deskripsi'    => 'nullable|string',
-            'jam_mulai'    => 'nullable',
-            'jam_selesai'  => 'nullable',
+            'jam_mulai'    => 'nullable|date_format:H:i',
+            'jam_selesai'  => 'nullable|date_format:H:i',
             'destinasi_id' => 'nullable|exists:destinasi,id',
         ]);
 
@@ -36,11 +36,11 @@ class ScheduleController extends Controller
             'jam_selesai'  => $request->jam_selesai,
         ]);
 
-        return redirect()->back()->with('success', 'Jadwal berhasil ditambahkan!');
+        return back()->with('success', 'Jadwal kegiatan berhasil ditambahkan!');
     }
 
     /**
-     * Hapus jadwal.
+     * Hapus jadwal kegiatan dari travel plan.
      */
     public function destroy(Schedule $schedule)
     {
@@ -50,6 +50,6 @@ class ScheduleController extends Controller
 
         $schedule->delete();
 
-        return redirect()->back()->with('success', 'Jadwal berhasil dihapus.');
+        return back()->with('success', 'Jadwal kegiatan berhasil dihapus.');
     }
 }

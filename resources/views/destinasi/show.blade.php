@@ -9,16 +9,7 @@
 <body class="bg-gray-50 font-sans">
 
     <!-- Navbar -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <a href="{{ route('home') }}" class="text-2xl font-bold tracking-tight">
-                    <span class="text-sky-600">TripMate</span>
-                </a>
-                <a href="javascript:history.back()" class="text-sm text-gray-600 hover:text-sky-500">← Kembali</a>
-            </div>
-        </div>
-    </nav>
+    @include('layouts.navigation')
 
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         

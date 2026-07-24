@@ -15,6 +15,20 @@
                     <p class="text-sky-100 text-xs mt-0.5">Isi detail perjalananmu di bawah ini</p>
                 </div>
 
+                @if ($errors->any())
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 m-6 mb-0 rounded-r-xl">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <h3 class="text-sm font-bold text-red-800">Gagal menyimpan rencana:</h3>
+                        </div>
+                        <ul class="mt-2 ml-7 list-disc text-xs text-red-700">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <form action="{{ route('travel-plans.store') }}" method="POST" enctype="multipart/form-data" id="formRencana">
                     @csrf
 

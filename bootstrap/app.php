@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(append: [
             \App\Http\Middleware\EnsureUserIsActive::class,
+            \App\Http\Middleware\PreventBackHistory::class,
         ]);
         $middleware->alias([
             'admin' => \App\Http\Middleware\IsAdmin::class,

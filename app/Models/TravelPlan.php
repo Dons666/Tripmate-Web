@@ -15,15 +15,27 @@ class TravelPlan extends Model
         'tanggal_mulai',
         'tanggal_selesai',
         'budget',
+        'jumlah_peserta',
         'status',
         'is_checkout',
+        'payment_status',
+        'payment_proof',
+        'trip_status',
+        'payment_method',
+        'payment_ref',
+        'trip_started_at',
+        'trip_ended_at',
+        'payout_released_at',
         'foto_sampul',
     ];
 
     protected $casts = [
-        'tanggal_mulai'   => 'date',
-        'tanggal_selesai' => 'date',
-        'is_checkout'     => 'boolean',
+        'tanggal_mulai'      => 'date',
+        'tanggal_selesai'    => 'date',
+        'is_checkout'        => 'boolean',
+        'trip_started_at'    => 'datetime',
+        'trip_ended_at'      => 'datetime',
+        'payout_released_at' => 'datetime',
     ];
 
     public function getTotalExpensesAttribute()
@@ -36,6 +48,10 @@ class TravelPlan extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function travel()
+    {
+        return $this->belongsTo(Travel::class);
+    }
 
     public function destinasis()
     {
@@ -51,4 +67,5 @@ class TravelPlan extends Model
     {
         return $this->hasMany(Schedule::class)->orderBy('tanggal')->orderBy('jam_mulai');
     }
-}
+}
+

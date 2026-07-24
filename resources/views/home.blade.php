@@ -14,39 +14,7 @@
 <body class="bg-gray-50 font-sans">
 
     <!-- Navbar -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex-shrink-0 flex items-center">
-                    <a href="{{ route('home') }}" class="text-2xl font-bold tracking-tight">
-                        <span class="text-sky-600">TripMate</span>
-                    </a>
-                </div>
-                <div class="hidden md:flex space-x-2">
-                    <a href="{{ route('home') }}" class="text-sky-600 font-medium px-4 py-2 rounded-lg bg-sky-50 transition">Home</a>
-                    <a href="{{ route('travel-plans.index') }}" class="text-gray-500 hover:text-gray-900 hover:bg-gray-100 font-medium text-sm px-4 py-2 rounded-lg transition">Rencana</a>
-                    <a href="{{ route('bookmarks.index') }}" class="text-gray-500 hover:text-gray-900 hover:bg-gray-100 font-medium text-sm px-4 py-2 rounded-lg transition">Bookmarks</a>
-                </div>
-                <div class="flex items-center space-x-4">
-                    @auth
-                        <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 hover:opacity-80 transition">
-                            @if(Auth::user()->avatar)
-                                <img src="{{ asset('storage/' . Auth::user()->avatar) }}" alt="Avatar" class="w-8 h-8 rounded-full object-cover border-2 border-sky-100">
-                            @else
-                                <div class="w-8 h-8 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-xs font-bold">
-                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                                </div>
-                            @endif
-                            <span class="text-sm font-medium text-gray-700 hidden sm:inline">{{ Auth::user()->name }}</span>
-                        </a>
-                    @else
-                        <a href="{{ route('login') }}" class="text-sm text-gray-700 hover:text-sky-600">Login</a>
-                        <a href="{{ route('register') }}" class="bg-sky-500 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-sky-600 active:scale-95 transition">Daftar</a>
-                    @endauth
-                </div>
-            </div>
-        </div>
-    </nav>
+    @include('layouts.navigation')
 
     <!-- Hero Section & Search Box -->
 <section class="relative h-[650px] overflow-hidden">
@@ -346,6 +314,227 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 </section>
+
+    <!-- BAGIAN BARU: Penyedia Layanan Travel & Rental Armada -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-slate-100">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 bg-sky-50 text-sky-700 rounded-full text-xs font-extrabold border border-sky-200 mb-2">
+                    <span>🚌 Kemitraan Travel Terpercaya</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                    Penyedia Layanan Travel & Rental Armada
+                </h2>
+                <p class="text-slate-500 text-xs sm:text-sm mt-1">
+                    Sewa mobil, mini bus, dan layanan travel antarkota dengan tarif transparan dan armada siap jalan.
+                </p>
+            </div>
+            <a href="{{ route('penyedia-travel.index') }}" class="px-5 py-2.5 bg-slate-900 hover:bg-sky-600 text-white text-xs font-extrabold rounded-2xl transition-colors duration-200 shadow-md flex items-center justify-center gap-1.5 shrink-0 w-full sm:w-auto">
+                <span>Lihat Semua Travel</span>
+                <span>→</span>
+            </a>
+        </div>
+
+        @if(isset($penyediaTravels) && count($penyediaTravels) > 0)
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach($penyediaTravels as $travel)
+                    @php
+                        $providerUser = \App\Models\User::where('email', $travel->email)->first();
+                        $targetPackage = $providerUser ? \App\Models\Travel::where('user_id', $providerUser->id)->first() : null;
+                        if (!$targetPackage) {
+                            $targetPackage = \App\Models\Travel::where('nama_travel', 'like', "%{$travel->nama_travel}%")->first();
+                        }
+                        $detailUrl = $targetPackage ? route('penyedia-travel.show', $targetPackage->id) : route('penyedia-travel.index', ['search' => $travel->nama_travel]);
+                    @endphp
+                    <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+                        <div class="space-y-4">
+                            <!-- Top Info Header -->
+                            <div class="flex items-start justify-between gap-3 pb-4 border-b border-slate-100">
+                                <a href="{{ $detailUrl }}" class="flex items-center gap-3 min-w-0 group/link">
+                                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-white flex items-center justify-center font-black text-xl shadow-md shrink-0 group-hover/link:scale-105 transition-transform">
+                                        🚌
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h3 class="font-extrabold text-slate-900 text-base leading-snug group-hover/link:text-sky-600 transition-colors truncate">
+                                            {{ $travel->nama_travel }} &rarr;
+                                        </h3>
+                                        <p class="text-slate-500 text-xs font-medium truncate mt-0.5">
+                                            📍 {{ $travel->kota_asal_travel ?? 'Kota Terdaftar' }}
+                                        </p>
+                                    </div>
+                                </a>
+                                <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-lg border border-emerald-200 shrink-0">
+                                    ✓ Verified
+                                </span>
+                            </div>
+
+                            <!-- Vehicle & Price Showcase -->
+                            <div>
+                                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2">Daftar Armada Kendaraan</span>
+                                @if(!empty($travel->jenis_kendaraan))
+                                    @php
+                                        $armadaList = array_values(array_filter(array_map('trim', explode(',', $travel->jenis_kendaraan))));
+                                        $fotosArray = $travel->fotos_array;
+                                    @endphp
+                                    <div class="space-y-2">
+                                        @foreach(array_slice($armadaList, 0, 2) as $index => $armada)
+                                            @php
+                                                $armadaPhoto = $fotosArray[$index] ?? null;
+                                                $rawItem = $armada;
+                                                $extractedPrice = null;
+                                                if (preg_match('/^(.*?)\s*\((?:Rp\s*)?([\d\.]+)\)$/i', $rawItem, $priceMatches)) {
+                                                    $rawItem = trim($priceMatches[1]);
+                                                    $cleanNum = str_replace('.', '', $priceMatches[2]);
+                                                    if (is_numeric($cleanNum) && (float)$cleanNum > 0) {
+                                                        $extractedPrice = 'Rp ' . number_format((float)$cleanNum, 0, ',', '.');
+                                                    }
+                                                }
+                                                if (!$extractedPrice && ($travel->harga ?? 0) > 0) {
+                                                    $extractedPrice = 'Rp ' . number_format($travel->harga, 0, ',', '.');
+                                                }
+                                                $extractedSeats = null;
+                                                if (preg_match('/^(.*?)\s*\((?:(\d+)\s*(?:Kursi|Orang|Pax|Seat))\)$/i', $rawItem, $seatMatches)) {
+                                                    $rawItem = trim($seatMatches[1]);
+                                                    $extractedSeats = $seatMatches[2] . ' Kursi';
+                                                }
+                                                $extractedQty = null;
+                                                if (preg_match('/^(\d+\s*Unit)\s+(.*)$/i', $rawItem, $qtyMatches)) {
+                                                    $extractedQty = $qtyMatches[1];
+                                                    $rawItem = trim($qtyMatches[2]);
+                                                }
+                                            @endphp
+                                            <a href="{{ $detailUrl }}" class="p-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white flex items-center justify-between gap-2 shadow-sm transition block">
+                                                <div class="flex items-center gap-2.5 min-w-0">
+                                                    @if($armadaPhoto)
+                                                        <img src="{{ asset('storage/' . $armadaPhoto) }}" alt="{{ $rawItem }}" class="w-9 h-9 object-cover rounded-xl border border-slate-700 shrink-0">
+                                                    @else
+                                                        <div class="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center text-sm shrink-0 border border-slate-700">
+                                                            🚐
+                                                        </div>
+                                                    @endif
+                                                    <div class="min-w-0">
+                                                        <span class="text-xs font-bold truncate block">
+                                                            @if($extractedQty)
+                                                                <span class="text-sky-400 font-extrabold">{{ $extractedQty }}</span>
+                                                            @endif
+                                                            {{ $rawItem }}
+                                                        </span>
+                                                        @if($extractedSeats)
+                                                            <span class="text-[10px] text-sky-300 font-semibold block">
+                                                                👥 {{ $extractedSeats }}
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                @if($extractedPrice)
+                                                    <span class="px-2 py-1 bg-emerald-500 text-white rounded-lg text-[10px] font-black shrink-0">
+                                                        {{ $extractedPrice }} / hari
+                                                    </span>
+                                                @endif
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <span class="text-xs text-slate-400 italic">Armada siap dihubungi</span>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Card Footer WhatsApp CTA & Detail Link -->
+                        <div class="pt-4 border-t border-slate-100 mt-5 flex items-center justify-between gap-2">
+                            <a href="{{ $detailUrl }}" class="px-3.5 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-extrabold rounded-xl transition border border-sky-200 shadow-sm flex items-center gap-1 shrink-0">
+                                <span>👁️ Detail Travel</span>
+                            </a>
+                            @php
+                                $cleanPhone = preg_replace('/[^0-9]/', '', $travel->nomor_hp_pemilik_travel ?? '');
+                                if (str_starts_with($cleanPhone, '0')) {
+                                    $cleanPhone = '62' . substr($cleanPhone, 1);
+                                }
+                                $waUrl = !empty($cleanPhone) ? "https://wa.me/{$cleanPhone}?text=" . urlencode("Halo {$travel->nama_travel}, saya menemukan travel Anda di TripMate dan ingin menanyakan armada & reservasi.") : '#';
+                            @endphp
+                            @if(!empty($cleanPhone))
+                                <a href="{{ $waUrl }}" target="_blank" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold rounded-xl transition shadow-sm flex items-center gap-1 shrink-0">
+                                    <span>💬 Hubungi WA</span>
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="text-center py-10 bg-slate-50 rounded-3xl border border-slate-200">
+                <span class="text-4xl block mb-2">🚌</span>
+                <p class="text-xs text-slate-500 font-bold">Layanan travel terverifikasi siap melayani perjalanan Anda.</p>
+                <a href="{{ route('penyedia-travel.index') }}" class="inline-block mt-3 px-5 py-2.5 bg-sky-600 text-white rounded-2xl text-xs font-bold shadow">
+                    Lihat Katalog Travel
+                </a>
+            </div>
+        @endif
+    </section>
+
+    <!-- Section: Paket Travel Tersedia -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                    Paket Travel Menarik 🧳
+                </h2>
+                <p class="text-sm text-slate-500 mt-2 font-medium">Pesan paket liburan lengkap dari mitra terpercaya</p>
+            </div>
+            <a href="{{ route('penyedia-travel.index') }}" class="hidden sm:inline-flex items-center gap-1 text-sm font-bold text-sky-600 hover:text-sky-700 transition">
+                Lihat Semua &rarr;
+            </a>
+        </div>
+
+        @if(isset($paketTravels) && count($paketTravels) > 0)
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach($paketTravels as $paket)
+                    <a href="{{ route('penyedia-travel.show', $paket) }}" class="block bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                        <div class="relative h-48 w-full rounded-2xl overflow-hidden mb-4 bg-slate-100">
+                            @if($paket->gambar)
+                                <img src="{{ asset('storage/' . $paket->gambar) }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Paket Travel">
+                            @else
+                                <div class="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                                    <span class="text-4xl mb-2">🏖️</span>
+                                    <span class="text-xs font-bold uppercase tracking-widest">TripMate</span>
+                                </div>
+                            @endif
+                            <div class="absolute top-3 right-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-xl text-xs font-black text-sky-700 shadow-sm">
+                                Rp {{ number_format($paket->harga_paket, 0, ',', '.') }} / Pax
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <h3 class="font-extrabold text-slate-900 text-lg group-hover:text-sky-600 transition-colors line-clamp-1">
+                                    {{ $paket->nama_travel }}
+                                </h3>
+                                <p class="text-xs font-medium text-slate-500 mt-1 line-clamp-1">By: {{ $paket->user->name ?? 'Mitra Travel' }}</p>
+                            </div>
+                            
+                            <div class="flex items-center gap-2 text-[11px] font-bold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                                <span>🚐</span>
+                                <span class="truncate">{{ $paket->armada->nama_kendaraan ?? 'Kendaraan Nyaman' }}</span>
+                                <span class="text-slate-300 mx-1">•</span>
+                                <span class="text-sky-600">{{ $paket->armada->kapasitas_kursi ?? '-' }} Kursi</span>
+                            </div>
+
+                            @if($paket->destinasis->count() > 0)
+                                <div class="text-[11px] font-medium text-slate-500 line-clamp-1">
+                                    <span class="font-bold text-slate-700">Rute:</span> 
+                                    {{ $paket->destinasis->pluck('nama_destinasi')->join(', ') }}
+                                </div>
+                            @endif
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        @else
+            <div class="text-center py-10 bg-slate-50 rounded-3xl border border-slate-200">
+                <p class="text-xs text-slate-500 font-bold">Belum ada paket travel yang tersedia.</p>
+            </div>
+        @endif
+    </section>
 
 <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
@@ -719,6 +908,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <li><a href="{{ route('travel-plans.index') }}" class="hover:text-sky-600 transition-all duration-200">Rencana Perjalanan</a></li>
                     <li><a href="{{ route('bookmarks.index') }}" class="hover:text-sky-600 transition-all duration-200">Bookmarks</a></li>
                     <li><a href="{{ route('preference.create') }}" class="hover:text-sky-600 transition-all duration-200">Preferensi</a></li>
+                    <li><a href="{{ route('penyedia-travel.create') }}" class="text-sky-600 font-semibold hover:underline transition-all duration-200">Daftar Travel (Mitra)</a></li>
                 </ul>
             </div>
 

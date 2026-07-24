@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Kategori;
 use App\Models\Travel;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Facades\Excel;
 
 class DatabaseSeeder extends Seeder
@@ -56,11 +57,41 @@ class DatabaseSeeder extends Seeder
 
         /*
         |--------------------------------------------------------------------------
-        | 3. Seed Mitra Agen Travel & Tour
+        | 3. Seed Mitra Agen Travel & User Akun Travel
         |--------------------------------------------------------------------------
         */
+        $travelUsers = [
+            [
+                'email'    => 'travel@nusa.com',
+                'name'     => 'Nusa Horizon Tour & Travel',
+                'password' => bcrypt('travel123'),
+                'role'     => 'travel',
+            ],
+            [
+                'email'    => 'travel@java.com',
+                'name'     => 'Java Explorer Trans & Travel',
+                'password' => bcrypt('travel123'),
+                'role'     => 'travel',
+            ],
+            [
+                'email'    => 'travel@parahyangan.com',
+                'name'     => 'Parahyangan Heritage Tour',
+                'password' => bcrypt('travel123'),
+                'role'     => 'travel',
+            ],
+        ];
+
+        foreach ($travelUsers as $tu) {
+            User::firstOrCreate(['email' => $tu['email']], $tu);
+        }
+
+        $userNusa = User::where('email', 'travel@nusa.com')->first();
+        $userJava = User::where('email', 'travel@java.com')->first();
+        $userPara = User::where('email', 'travel@parahyangan.com')->first();
+
         $travels = [
             [
+                'user_id'     => $userNusa->id ?? null,
                 'nama_travel' => 'Nusa Horizon Tour & Travel',
                 'slug'        => 'nusa-horizon-tour-travel',
                 'layanan'     => 'Paket Tur Lengkap, Driver & Tiket Masuk',
@@ -72,6 +103,7 @@ class DatabaseSeeder extends Seeder
                 'gambar'      => 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80',
             ],
             [
+                'user_id'     => $userJava->id ?? null,
                 'nama_travel' => 'Java Explorer Trans & Travel',
                 'slug'        => 'java-explorer-trans-travel',
                 'layanan'     => 'Open Trip, Bus Pariwisata & Tour Guide',
@@ -83,6 +115,7 @@ class DatabaseSeeder extends Seeder
                 'gambar'      => 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=800&q=80',
             ],
             [
+                'user_id'     => $userPara->id ?? null,
                 'nama_travel' => 'Parahyangan Heritage Tour',
                 'slug'        => 'parahyangan-heritage-tour',
                 'layanan'     => 'City Tour & Wisata Budaya/Kuliner',
@@ -106,11 +139,13 @@ class DatabaseSeeder extends Seeder
             ],
         ];
 
-        foreach ($travels as $t) {
-            Travel::firstOrCreate(
-                ['slug' => $t['slug']],
-                $t
-            );
+        if (Schema::hasTable('travels')) {
+            foreach ($travels as $t) {
+                Travel::updateOrCreate(
+                    ['slug' => $t['slug']],
+                    $t
+                );
+            }
         }
 
         /*

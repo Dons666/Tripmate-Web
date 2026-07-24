@@ -10,13 +10,15 @@ class Rating extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'destinasi_id', 'skor_rating', 'komentar'
+        'user_id', 'destinasi_id', 'skor_rating', 'komentar', 'is_flagged', 'flag_reason', 'ai_checked_at'
     ];
 
     protected function casts(): array
     {
         return [
             'skor_rating' => 'decimal:2',
+            'is_flagged' => 'boolean',
+            'ai_checked_at' => 'datetime',
         ];
     }
 
