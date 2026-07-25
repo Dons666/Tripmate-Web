@@ -21,7 +21,7 @@ class RatingController extends Controller
 
     public function store(Request $request, string $type, int $id): RedirectResponse
     {
-        abort_unless($type === 'destination', 404);
+        abort_unless($type === 'destination' || $type === 'travel', 404);
 
         $request->validate([
             'rating' => ['required', 'numeric', 'min:1', 'max:5'],
@@ -56,15 +56,26 @@ class RatingController extends Controller
             $ratingData['ai_checked_at'] = $aiCheckedAt;
         }
 
-        Rating::updateOrCreate(
-            [
-                'user_id' => Auth::id(),
-                'destinasi_id' => $id,
-            ],
-            $ratingData
-        );
-
-        Rating::updateDestinationRating($id);
+        if ($type === 'destination') {
+            Rating::updateOrCreate(
+                [
+                    'user_id' => Auth::id(),
+                    'destinasi_id' => $id,
+                ],
+                $ratingData
+            );
+            Rating::updateDestinationRating($id);
+        } else {
+            Rating::updateOrCreate(
+                [
+                    'user_id' => Auth::id(),
+                    'travel_id' => $id,
+                ],
+                $ratingData
+            );
+            $average = Rating::where('travel_id', $id)->avg('skor_rating') ?? 5.0;
+            \App\Models\Travel::where('id', $id)->update(['rating' => $average]);
+        }
 
         return back()->with('success', 'Ulasan berhasil ditambahkan/diperbarui!');
     }

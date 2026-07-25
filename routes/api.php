@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\RouteController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\RatingController;
 use App\Http\Controllers\Api\PreferenceController;
+use App\Http\Controllers\Api\TravelController;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,6 +68,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('travel-plans',             [TravelPlanController::class, 'store']);
     Route::get('travel-plans/{id}',         [TravelPlanController::class, 'show']);
     Route::delete('travel-plans/{id}',      [TravelPlanController::class, 'destroy']);
+    Route::post('travel-plans/{id}/complete', [TravelPlanController::class, 'complete']);
     Route::post(
         'travel-plans/{id}/destinasi',
         [TravelPlanController::class, 'addDestinasi']
@@ -75,6 +77,13 @@ Route::middleware('auth:sanctum')->group(function () {
         'travel-plans/{planId}/destinasi/{destinasiId}',
         [TravelPlanController::class, 'removeDestinasi']
     );
+
+    // Travels (List & Detail)
+    Route::get('travels',                  [TravelController::class, 'index']);
+    Route::get('travels/{id}',             [TravelController::class, 'show']);
+    Route::post('travel-plans/book-package', [TravelPlanController::class, 'bookPackage']);
+    Route::post('travel-plans/{id}/attach-travel', [TravelPlanController::class, 'attachTravel']);
+    Route::post('travel-plans/{id}/checkout-travel', [TravelPlanController::class, 'checkoutTravel']);
 
     // Expenses
     Route::get('expenses',          [ExpenseController::class, 'index']);
@@ -91,6 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Rating & Review (submit/update — auth)
     Route::post('ratings/destinasi/{id}', [RatingController::class, 'store']);
+    Route::post('ratings/travel/{id}',    [RatingController::class, 'storeTravel']);
     Route::get('ratings/my',              [RatingController::class, 'my']);
 
     // Preference user

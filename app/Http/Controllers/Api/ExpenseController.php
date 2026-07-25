@@ -45,6 +45,7 @@ class ExpenseController extends Controller
             ->findOrFail($request->travel_plan_id);
 
         $expense = Expense::create([
+            'user_id'          => $request->user()->id,
             'travel_plan_id'   => $request->travel_plan_id,
             'nama_pengeluaran' => $request->nama_pengeluaran,
             'jumlah'           => $request->jumlah,

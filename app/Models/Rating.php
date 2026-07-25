@@ -10,7 +10,7 @@ class Rating extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'destinasi_id', 'skor_rating', 'komentar', 'is_flagged', 'flag_reason', 'ai_checked_at'
+        'user_id', 'destinasi_id', 'travel_id', 'skor_rating', 'komentar', 'is_flagged', 'flag_reason', 'ai_checked_at'
     ];
 
     protected function casts(): array
@@ -25,6 +25,11 @@ class Rating extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function travel()
+    {
+        return $this->belongsTo(Travel::class);
     }
 
     public function destinasi()

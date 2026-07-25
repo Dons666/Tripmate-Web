@@ -104,17 +104,25 @@ class TravelPlanController extends Controller
 
         $request->validate([
             'metode_pembayaran' => 'required|string',
+            'payment_proof'     => 'required|image|max:2048',
         ]);
 
-
+        $proofPath = null;
+        if ($request->hasFile('payment_proof')) {
+            $proofPath = $request->file('payment_proof')->store('payment-proofs', 'public');
+        }
 
         $travelPlan->update([
             'is_checkout' => true,
-            'status'      => 'Selesai',
+            'payment_method' => $request->metode_pembayaran,
+            'payment_proof' => $proofPath,
+            'payment_status' => 'pending_admin',
+            'trip_status' => 'pending',
+            'status'      => 'Menunggu Konfirmasi',
         ]);
 
         return redirect()->route('travel-plans.receipt', $travelPlan)
-            ->with('success', 'Pembayaran Checkout Paket Travel berhasil! Perjalanan telah resmi dikonfirmasi.');
+            ->with('success', 'Pembayaran Checkout Paket Travel berhasil diajukan! Menunggu verifikasi dari Admin.');
     }
 
     public function addDestinasi(Request $request, TravelPlan $travelPlan)
@@ -232,6 +240,31 @@ class TravelPlanController extends Controller
             return $expense->kategori ? ucfirst($expense->kategori) : 'Lain-lain';
         });
 
-        return view('travel-plans.receipt', compact('travelPlan', 'expensesByCategory'));
+        $userRatings = \App\Models\Rating::where('user_id', Auth::id())->get();
+
+        return view('travel-plans.receipt', compact('travelPlan', 'expensesByCategory', 'userRatings'));
+    }
+
+    public function bookPackage(Request $request, $travelId)
+    {
+        $request->validate([
+            'jumlah_peserta' => 'required|integer|min:1',
+        ]);
+
+        $travel = \App\Models\Travel::findOrFail($travelId);
+
+        $plan = Auth::user()->travelPlans()->create([
+            'nama_perjalanan' => 'Trip ' . $travel->nama_travel,
+            'tujuan'          => $travel->kota,
+            'tanggal_mulai'   => $travel->tanggal_keberangkatan,
+            'tanggal_selesai' => $travel->tanggal_keberangkatan,
+            'budget'          => $travel->harga_paket * $request->jumlah_peserta,
+            'travel_id'       => $travel->id,
+            'jumlah_peserta'  => $request->jumlah_peserta,
+            'status'          => 'Perencanaan Aktif',
+        ]);
+
+        return redirect()->route('travel-plans.show', $plan->id)
+            ->with('success', 'Paket travel berhasil dipesan! Anda langsung diarahkan ke rencana perjalanan baru.');
     }
 }
