@@ -128,7 +128,7 @@ Route::middleware(['auth'])->group(function () {
     // Jadwal Perjalanan (Schedules / Itinerary)
     Route::post('/travel-plans/{travelPlan}/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
     Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
-    // Admin routes
+   // Admin routes
     Route::prefix('admin')
         ->name('admin.')
         ->middleware('admin')
