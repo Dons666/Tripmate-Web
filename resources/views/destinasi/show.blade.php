@@ -218,11 +218,59 @@
                 @if(session('success'))
                     <div class="bg-green-50 border border-green-200 text-green-700 p-3 rounded-xl mb-4 text-sm font-medium">✅ {{ session('success') }}</div>
                 @endif
+                
                 @if(session('error'))
-                    <div class="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-xl mb-4 text-sm font-medium">⚠️ {{ session('error') }}</div>
+                    <!-- MODAL POPUP PERINGATAN MODERASI AI GEMINI -->
+                    <div id="aiWarningModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all duration-300">
+                        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative border border-rose-100 animate-in fade-in zoom-in duration-200">
+                            <div class="w-14 h-14 bg-rose-100 rounded-2xl flex items-center justify-center text-2xl mb-4 shadow-inner text-rose-600 mx-auto">
+                                🤖⚠️
+                            </div>
+                            
+                            <h3 class="text-xl font-extrabold text-slate-900 text-center mb-2">Peringatan Moderasi AI Gemini</h3>
+                            
+                            <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 mb-4 text-center">
+                                <p class="text-xs font-bold text-rose-800 uppercase tracking-wider mb-1">Perkataan Tidak Pantas Terdeteksi</p>
+                                <p class="text-sm font-semibold text-rose-900 leading-relaxed">
+                                    {{ session('error') }}
+                                </p>
+                            </div>
+
+                            @if(old('komentar'))
+                                <div class="mb-5 bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                                    <span class="text-[11px] font-bold text-slate-500 block mb-1">Draf komentar Anda:</span>
+                                    <p class="text-xs italic text-slate-700 font-mono bg-white p-2 rounded border border-slate-200">
+                                        "{{ old('komentar') }}"
+                                    </p>
+                                </div>
+                            @endif
+
+                            <p class="text-xs text-slate-500 text-center mb-6 leading-relaxed">
+                                Mohon perbaiki isi ulasan Anda dengan kata-kata yang sopan dan tidak mengandung unsur toksisitas atau kata kasar.
+                            </p>
+
+                            <button type="button" onclick="closeAiWarningModal()" class="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl text-sm transition shadow-lg shadow-rose-500/25 flex items-center justify-center gap-2">
+                                ✏️ Saya Mengerti & Edit Komentar
+                            </button>
+                        </div>
+                    </div>
+
+                    <script>
+                        function closeAiWarningModal() {
+                            const modal = document.getElementById('aiWarningModal');
+                            if (modal) {
+                                modal.classList.add('hidden');
+                            }
+                            const textarea = document.querySelector('textarea[name="komentar"]');
+                            if (textarea) {
+                                textarea.focus();
+                                textarea.select();
+                            }
+                        }
+                    </script>
                 @endif
 
-                <form action="{{ route('destinasi.rate', $destinasi->id) }}" method="POST" class="mb-8 bg-gray-50 p-5 rounded-xl border border-gray-100">
+                <form action="{{ route('destinasi.rate', $destinasi->id) }}" method="POST" class="mb-8 bg-gray-50 p-5 rounded-xl border border-gray-100" id="commentRatingForm">
                     @csrf
                     <h3 class="font-semibold text-gray-800 mb-3 text-sm">Beri Ulasanmu</h3>
                     <div class="flex flex-col md:flex-row gap-4 mb-3">
@@ -238,11 +286,27 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Komentar (Opsional)</label>
-                        <textarea name="komentar" rows="3" placeholder="Bagikan pengalamanmu..." class="w-full px-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white"></textarea>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Komentar (Tekan Enter untuk kirim)</label>
+                        <textarea name="komentar" id="komentarInput" rows="3" placeholder="Bagikan pengalamanmu (tekan Enter untuk kirim)..." class="w-full px-4 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white">{{ old('komentar') }}</textarea>
                     </div>
                     <button type="submit" class="bg-sky-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-sky-700 transition">Kirim Ulasan</button>
                 </form>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const komentarInput = document.getElementById('komentarInput');
+                        if (komentarInput) {
+                            komentarInput.addEventListener('keydown', function (e) {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    if (this.form) {
+                                        this.form.requestSubmit();
+                                    }
+                                }
+                            });
+                        }
+                    });
+                </script>
             @else
                 <div class="bg-gray-50 p-4 rounded-xl text-sm text-gray-500 mb-8 border border-gray-100">
                     Silakan <a href="{{ route('login') }}" class="text-sky-600 font-medium hover:underline">Login</a> untuk memberikan ulasan.

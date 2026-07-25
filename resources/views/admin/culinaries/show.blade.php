@@ -77,7 +77,7 @@
                 @if(!empty($culinaryImages))
                     <div style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 10px;">
                         @foreach($culinaryImages as $imagePath)
-                            <img src="{{ asset('storage/' . $imagePath) }}" alt="Foto Kuliner" class="photo-preview" style="min-height: 150px; border-radius: 16px;">
+                            <img src="{{ \Illuminate\Support\Str::startsWith($imagePath, ['http://', 'https://']) ? $imagePath : asset('storage/' . $imagePath) }}" alt="Foto Kuliner" class="photo-preview" style="min-height: 150px; border-radius: 16px;">
                         @endforeach
                     </div>
                     <p class="photo-caption">{{ count($culinaryImages) }} foto tersimpan saat ini.</p>

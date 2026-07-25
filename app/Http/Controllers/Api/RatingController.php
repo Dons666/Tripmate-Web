@@ -5,11 +5,19 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Rating;
 use App\Models\Destinasi;
+use App\Services\GeminiFilterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class RatingController extends Controller
 {
+    protected GeminiFilterService $geminiFilterService;
+
+    public function __construct(GeminiFilterService $geminiFilterService)
+    {
+        $this->geminiFilterService = $geminiFilterService;
+    }
+
     /**
      * GET /api/ratings/destinasi/{id}
      * Ambil semua rating untuk destinasi tertentu (publik).
@@ -52,6 +60,20 @@ class RatingController extends Controller
             'komentar'    => ['nullable', 'string', 'max:500'],
         ]);
 
+        $komentar = $validated['komentar'] ?? null;
+
+        if (!empty($komentar) && trim($komentar) !== '') {
+            $aiAnalysis = $this->geminiFilterService->analyzeComment($komentar);
+
+            if (!$aiAnalysis['is_safe']) {
+                return response()->json([
+                    'status'      => 'error',
+                    'message'     => 'Komentar Anda tidak dapat dipublikasikan karena terdeteksi mengandung konten tidak pantas oleh AI Filter Gemini (' . ($aiAnalysis['reason'] ?? 'Pelanggaran konten') . ').',
+                    'ai_analysis' => $aiAnalysis,
+                ], 422);
+            }
+        }
+
         $userId = $request->user()?->id ?? Auth::id();
 
         $rating = Rating::updateOrCreate(
@@ -61,7 +83,7 @@ class RatingController extends Controller
             ],
             [
                 'skor_rating' => $validated['skor_rating'],
-                'komentar'    => $validated['komentar'] ?? null,
+                'komentar'    => $komentar,
             ]
         );
 
@@ -69,6 +91,7 @@ class RatingController extends Controller
         Rating::updateDestinationRating($id);
 
         return response()->json([
+            'status'     => 'success',
             'message'    => 'Rating berhasil disimpan.',
             'rating'     => [
                 'id'          => $rating->id,
@@ -113,6 +136,20 @@ class RatingController extends Controller
             'komentar'    => ['nullable', 'string', 'max:500'],
         ]);
 
+        $komentar = $validated['komentar'] ?? null;
+
+        if (!empty($komentar) && trim($komentar) !== '') {
+            $aiAnalysis = $this->geminiFilterService->analyzeComment($komentar);
+
+            if (!$aiAnalysis['is_safe']) {
+                return response()->json([
+                    'status'      => 'error',
+                    'message'     => 'Komentar Anda tidak dapat dipublikasikan karena terdeteksi mengandung konten tidak pantas oleh AI Filter Gemini (' . ($aiAnalysis['reason'] ?? 'Pelanggaran konten') . ').',
+                    'ai_analysis' => $aiAnalysis,
+                ], 422);
+            }
+        }
+
         $userId = $request->user()?->id ?? Auth::id();
 
         $rating = Rating::updateOrCreate(
@@ -122,7 +159,7 @@ class RatingController extends Controller
             ],
             [
                 'skor_rating' => $validated['skor_rating'],
-                'komentar'    => $validated['komentar'] ?? null,
+                'komentar'    => $komentar,
             ]
         );
 

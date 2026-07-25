@@ -117,7 +117,7 @@
             </div>
 
             <p class="text-xs text-slate-500 mb-4 leading-relaxed">
-                Jika Anda merasa akun Anda dinonaktifkan secara keliru, silakan tuliskan alasan dan penjelasan peninjauan ulang untuk Tim Admin.
+                Jika akun Anda dinonaktifkan atau pengajuan sebelumnya ditolak, Anda dapat menuliskan penjelasan dan alasan baru agar dapat ditinjau ulang oleh Admin.
             </p>
 
             <form action="{{ route('appeal.store') }}" method="POST">

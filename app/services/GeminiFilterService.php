@@ -53,8 +53,8 @@ Catatan:
 - Jika terdeteksi tidak pantas/spam/kasar, 'is_safe' = false, 'category' = salah satu dari: ('spam', 'toksisitas', 'ujaran_kebencian', 'bahasa_kasar', 'penipuan'), 'reason' = 'Penjelasan singkat maks 1 kalimat dalam Bahasa Indonesia'.";
 
         try {
-            // Models to try: gemini-2.5-flash, fallback to gemini-1.5-flash
-            $models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+            // Models list: gemini-3.5-flash, gemini-3.5-pro, fallback gemini-1.5-flash
+            $models = ['gemini-3.5-flash', 'gemini-3.5-pro', 'gemini-1.5-flash', 'gemini-1.5-pro'];
             $response = null;
 
             foreach ($models as $model) {

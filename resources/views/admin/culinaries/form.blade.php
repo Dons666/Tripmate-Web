@@ -104,7 +104,8 @@
 </head>
 <body>
     @php
-        $culinaryImage = !empty($culinary->image_url) ? asset('storage/' . $culinary->image_url) : null;
+        $rawImage = $culinary->gambar ?? $culinary->image_url ?? null;
+        $culinaryImage = !empty($rawImage) ? (\Illuminate\Support\Str::startsWith($rawImage, ['http://', 'https://']) ? $rawImage : asset('storage/' . $rawImage)) : null;
     @endphp
     <div class="page-shell">
         <div class="hero">
@@ -170,11 +171,11 @@
                 </div>
                 <div class="field-card">
                     <label>Latitude</label>
-                    <input type="number" step="0.0000001" name="latitude" value="{{ old('latitude', $culinary->latitude) }}">
+                    <input type="number" step="any" name="latitude" placeholder="Contoh: -6.123894" value="{{ old('latitude', $culinary->latitude) }}">
                 </div>
                 <div class="field-card">
                     <label>Longitude</label>
-                    <input type="number" step="0.0000001" name="longitude" value="{{ old('longitude', $culinary->longitude) }}">
+                    <input type="number" step="any" name="longitude" placeholder="Contoh: 106.827148" value="{{ old('longitude', $culinary->longitude) }}">
                 </div>
                 @include('admin.partials.operational-schedule-form', ['model' => $culinary, 'idPrefix' => 'culinary'])
                 <div class="field-card">
@@ -208,9 +209,9 @@
                     <input id="price_custom_culinary" type="number" step="0.01" min="0" name="price_custom" placeholder="Masukkan harga" value="{{ $priceCustomValue }}" style="margin-top:8px; display:none;">
                 </div>
                 <div class="field-card full">
-                    <label>Foto (Upload)</label>
-                    <input type="file" name="image_files[]" accept="image/*" multiple>
-                    <div class="helper-text">Upload satu atau banyak foto sekaligus. Foto baru akan ditambahkan ke koleksi kuliner.</div>
+                    <label>Link Alamat Foto (URL Gambar)</label>
+                    <textarea name="image_url" rows="3" placeholder="https://example.com/gambar.jpg">{{ old('image_url', $culinary->image_url ?? $culinary->gambar ?? '') }}</textarea>
+                    <div class="helper-text">Masukkan link alamat URL foto/gambar kuliner.</div>
                 </div>
                 <div class="field-card full">
                     <label>Transport ke Lokasi</label>

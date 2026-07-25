@@ -101,7 +101,7 @@
                         <a href="{{ route('admin.appeals.index') }}" class="action-btn">
                             📩 Banding Akun Member
                             @if($unreadNotificationCount > 0)
-                                <span class="badge-count">{{ $unreadNotificationCount }}</span>
+                                <span class="badge-count" style="background: #ef4444; font-weight: 900;">❗️ {{ $unreadNotificationCount }} Baru</span>
                             @endif
                         </a>
                         <a href="{{ route('admin.places.index') }}" class="action-btn">
@@ -169,6 +169,40 @@
                         <div class="summary-card-sub">
                             {{ $activeUserCount }} Aktif • <span style="color: #e11d48;">{{ $deactivatedUserCount }} Nonaktif</span>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Section Card: Jumlah Tempat & Komentar Menurut Tipe Tempat -->
+                <div class="section-card" style="margin-bottom: 28px;">
+                    <div class="section-title">
+                        <span>📊 Jumlah Tempat & Komentar (Destinasi Wisata, Kuliner, Penginapan)</span>
+                        <a href="{{ route('admin.places.index') }}" class="btn-link">Kelola Tempat &rarr;</a>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 16px;">
+                        @foreach($placeTypeStats as $stat)
+                            <div style="background: {{ $stat['bg_color'] }}; padding: 20px; border-radius: 16px; border: 1px solid {{ $stat['border_color'] }}; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <span style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: {{ $stat['color'] }}; letter-spacing: 0.5px;">
+                                        {{ $stat['icon'] }} {{ $stat['label'] }}
+                                    </span>
+                                    <span style="font-size: 11px; font-weight: 700; background: #ffffff; color: {{ $stat['color'] }}; padding: 3px 8px; border-radius: 99px; border: 1px solid {{ $stat['border_color'] }};">
+                                        Tipe Tempat
+                                    </span>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #ffffff; padding: 14px; border-radius: 12px; border: 1px solid {{ $stat['border_color'] }};">
+                                    <div>
+                                        <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Jumlah Tempat</div>
+                                        <div style="font-size: 24px; font-weight: 900; color: #0f172a; margin-top: 2px;">{{ number_format($stat['place_count']) }}</div>
+                                    </div>
+                                    <div style="border-left: 1px solid #f1f5f9; padding-left: 12px;">
+                                        <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">💬 Komentar</div>
+                                        <div style="font-size: 24px; font-weight: 900; color: {{ $stat['color'] }}; margin-top: 2px;">{{ number_format($stat['comment_count']) }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
 

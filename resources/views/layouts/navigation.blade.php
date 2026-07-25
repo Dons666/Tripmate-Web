@@ -28,6 +28,17 @@
                     <a href="{{ route('admin.users.index') }}" class="px-3.5 py-2 rounded-lg text-xs font-extrabold text-slate-700 hover:text-sky-600 hover:bg-sky-50 transition {{ request()->routeIs('admin.users.*') ? 'bg-sky-50 text-sky-600 font-black' : '' }}">
                         👥 Users
                     </a>
+                    <a href="{{ route('admin.appeals.index') }}" class="relative px-3.5 py-2 rounded-lg text-xs font-extrabold text-slate-700 hover:text-sky-600 hover:bg-sky-50 transition {{ request()->routeIs('admin.appeals.*') ? 'bg-sky-50 text-sky-600 font-black' : '' }}">
+                        📩 Banding
+                        @php
+                            $navUnreadAppeals = \App\Models\Appeal::where('is_read', false)->count();
+                        @endphp
+                        @if($navUnreadAppeals > 0)
+                            <span class="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-bounce shadow">
+                                !
+                            </span>
+                        @endif
+                    </a>
                 </div>
             @elseif(!Auth::check() || Auth::user()->role !== 'travel')
                 <!-- USER NAV LINKS -->
@@ -48,12 +59,21 @@
             @endif
 
             <div class="flex items-center gap-3">
-                @if(!Auth::check() || (Auth::user()->role !== 'travel' && Auth::user()->role !== 'admin'))
+                @if(!request()->routeIs('home') && (!Auth::check() || (Auth::user()->role !== 'travel' && Auth::user()->role !== 'admin')))
                     <a href="javascript:history.back()" class="text-sm text-gray-500 hover:text-sky-600 font-medium flex items-center gap-1 transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                         <span class="hidden sm:inline">Kembali</span>
                     </a>
                 @endif
+
+                @guest
+                    <a href="{{ route('login') }}" class="px-4 py-2 text-sm font-semibold text-sky-600 hover:text-sky-700 hover:bg-sky-50 rounded-xl transition">
+                        Masuk
+                    </a>
+                    <a href="{{ route('register') }}" class="px-4 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-500 rounded-xl shadow-sm transition">
+                        Daftar
+                    </a>
+                @endguest
 
                 @auth
                     <!-- NOTIFICATION BELL -->
