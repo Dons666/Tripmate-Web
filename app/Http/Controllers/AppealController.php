@@ -24,7 +24,8 @@ class AppealController extends Controller
             'reason.min' => 'Penjelasan banding minimal 10 karakter.',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $email = strtolower(trim($request->email));
+        $user = User::where('email', $email)->first();
 
         if (!$user) {
             return back()->withErrors(['email' => 'Akun dengan email tersebut tidak ditemukan.']);
@@ -34,23 +35,43 @@ class AppealController extends Controller
             return back()->with('info', 'Akun Anda saat ini aktif dan tidak sedang dinonaktifkan.');
         }
 
-        // Check if there is already a pending appeal
-        $existingAppeal = Appeal::where('user_id', $user->id)
+        // Cek apakah ada pengajuan banding yang sedang PENDING
+        $existingPending = Appeal::where(function ($q) use ($user, $email) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('email', $email);
+            })
             ->where('status', 'pending')
             ->first();
 
-        if ($existingAppeal) {
-            return back()->with('info', 'Anda sudah mengajukan banding yang sedang dalam proses peninjauan Admin. Mohon tunggu informasi selanjutnya.');
+        if ($existingPending) {
+            return back()->with('info', 'Anda sudah memiliki pengajuan banding yang saat ini sedang dalam proses peninjauan Admin. Mohon tunggu keputusan Admin.');
         }
 
-        Appeal::create([
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'reason' => $request->reason,
-            'status' => 'pending',
-            'is_read' => false,
-        ]);
+        // Jika pernah diajukan sebelumnya (misal status rejected), perbarui menjadi PENDING kembali dengan alasan baru
+        $existingAppeal = Appeal::where(function ($q) use ($user, $email) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('email', $email);
+            })
+            ->latest()
+            ->first();
 
-        return back()->with('appeal_success', 'Pengajuan banding Anda telah berhasil dikirim ke Admin. Silakan tunggu peninjauan ulang oleh tim Admin.');
+        if ($existingAppeal) {
+            $existingAppeal->update([
+                'reason' => $request->reason,
+                'status' => 'pending',
+                'is_read' => false,
+                'created_at' => now(),
+            ]);
+        } else {
+            Appeal::create([
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'reason' => $request->reason,
+                'status' => 'pending',
+                'is_read' => false,
+            ]);
+        }
+
+        return back()->with('appeal_success', 'Pengajuan banding baru Anda telah berhasil dikirim ke Admin. Silakan tunggu peninjauan ulang.');
     }
 }

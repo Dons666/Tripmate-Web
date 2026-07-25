@@ -124,7 +124,7 @@
                 @if(!empty($destinationImages))
                     <div style="padding: 14px 18px 0; display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;">
                         @foreach($destinationImages as $imagePath)
-                            <img src="{{ asset('storage/' . $imagePath) }}" alt="Foto Destinasi" class="photo-preview" style="min-height: 130px; border-radius: 16px;">
+                            <img src="{{ \Illuminate\Support\Str::startsWith($imagePath, ['http://', 'https://']) ? $imagePath : asset('storage/' . $imagePath) }}" alt="Foto Destinasi" class="photo-preview" style="min-height: 130px; border-radius: 16px;">
                         @endforeach
                     </div>
                     <p class="photo-note">{{ count($destinationImages) }} foto tersimpan saat ini.</p>
@@ -172,11 +172,11 @@
                 </div>
                 <div class="field-card">
                     <label>Latitude</label>
-                    <input type="number" step="0.0000001" name="latitude" value="{{ old('latitude', $destination->latitude) }}">
+                    <input type="number" step="any" name="latitude" placeholder="Contoh: -6.123894" value="{{ old('latitude', $destination->latitude) }}">
                 </div>
                 <div class="field-card">
                     <label>Longitude</label>
-                    <input type="number" step="0.0000001" name="longitude" value="{{ old('longitude', $destination->longitude) }}">
+                    <input type="number" step="any" name="longitude" placeholder="Contoh: 106.827148" value="{{ old('longitude', $destination->longitude) }}">
                 </div>
                 @include('admin.partials.operational-schedule-form', ['model' => $destination, 'idPrefix' => 'destination'])
                 <div class="field-card">
@@ -222,9 +222,9 @@
                     </select>
                 </div>
                 <div class="field-card full">
-                    <label>Foto (Upload)</label>
-                    <input type="file" name="image_files[]" accept="image/*" multiple>
-                    <div class="helper-text">Unggah satu atau banyak foto sekaligus. Foto baru akan ditambahkan ke koleksi destinasi.</div>
+                    <label>Link Alamat Foto (URL Gambar)</label>
+                    <textarea name="image_url" rows="3" placeholder="https://example.com/gambar.jpg">{{ old('image_url', $destination->image_url ?? $destination->gambar ?? '') }}</textarea>
+                    <div class="helper-text">Masukkan link alamat URL foto/gambar destinasi.</div>
                 </div>
                 <div class="field-card full">
                     <label>Transport ke Lokasi</label>

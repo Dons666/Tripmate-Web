@@ -79,7 +79,8 @@
 </head>
 <body>
     @php
-        $stayImage = !empty($stay->image_url) ? asset('storage/' . $stay->image_url) : null;
+        $rawImage = $stay->gambar ?? $stay->image_url ?? null;
+        $stayImage = !empty($rawImage) ? (\Illuminate\Support\Str::startsWith($rawImage, ['http://', 'https://']) ? $rawImage : asset('storage/' . $rawImage)) : null;
     @endphp
     <div class="page-shell">
         <div class="hero">
@@ -145,11 +146,11 @@
                 </div>
                 <div class="field-card">
                     <label>Latitude</label>
-                    <input type="number" step="0.0000001" name="latitude" value="{{ old('latitude', $stay->latitude) }}">
+                    <input type="number" step="any" name="latitude" placeholder="Contoh: -6.123894" value="{{ old('latitude', $stay->latitude) }}">
                 </div>
                 <div class="field-card">
                     <label>Longitude</label>
-                    <input type="number" step="0.0000001" name="longitude" value="{{ old('longitude', $stay->longitude) }}">
+                    <input type="number" step="any" name="longitude" placeholder="Contoh: 106.827148" value="{{ old('longitude', $stay->longitude) }}">
                 </div>
                 @include('admin.partials.operational-schedule-form', ['model' => $stay, 'idPrefix' => 'stay'])
                 <div class="field-card">
@@ -166,9 +167,9 @@
                     <input id="price_custom_stay" type="number" step="0.01" min="0" name="price_custom" placeholder="Masukkan harga" value="{{ $priceCustomValue }}" style="margin-top:8px; display:none;">
                 </div>
                 <div class="field-card full">
-                    <label>Foto (Upload)</label>
-                    <input type="file" name="image_files[]" accept="image/*" multiple>
-                    <div class="helper-text">Upload satu atau banyak foto sekaligus. Foto baru akan ditambahkan ke koleksi penginapan.</div>
+                    <label>Link Alamat Foto (URL Gambar)</label>
+                    <textarea name="image_url" rows="3" placeholder="https://example.com/gambar.jpg">{{ old('image_url', $stay->image_url ?? $stay->gambar ?? '') }}</textarea>
+                    <div class="helper-text">Masukkan link alamat URL foto/gambar penginapan.</div>
                 </div>
                 <div class="field-card full">
                     <label>Transport ke Lokasi</label>

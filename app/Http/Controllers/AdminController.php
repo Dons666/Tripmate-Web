@@ -115,6 +115,39 @@ class AdminController extends Controller
             ->take(5)
             ->get();
 
+        $placeTypeStats = [
+            [
+                'label' => 'Destinasi Wisata',
+                'type' => 'wisata',
+                'icon' => '🌴',
+                'color' => '#0284c7',
+                'bg_color' => '#f0f9ff',
+                'border_color' => '#bae6fd',
+                'place_count' => $destinationCount,
+                'comment_count' => Rating::whereHas('destinasi', fn($q) => $q->where('tipe', 'wisata'))->count(),
+            ],
+            [
+                'label' => 'Wisata Kuliner',
+                'type' => 'kuliner',
+                'icon' => '🍜',
+                'color' => '#c2410c',
+                'bg_color' => '#fff7ed',
+                'border_color' => '#ffedd5',
+                'place_count' => $culinaryCount,
+                'comment_count' => Rating::whereHas('destinasi', fn($q) => $q->where('tipe', 'kuliner'))->count(),
+            ],
+            [
+                'label' => 'Penginapan',
+                'type' => 'penginapan',
+                'icon' => '🏨',
+                'color' => '#059669',
+                'bg_color' => '#ecfdf5',
+                'border_color' => '#a7f3d0',
+                'place_count' => $stayCount,
+                'comment_count' => Rating::whereHas('destinasi', fn($q) => $q->where('tipe', 'penginapan'))->count(),
+            ],
+        ];
+
         return view('admin.adminDashboard', [
             'destinationCount' => $destinationCount,
             'culinaryCount' => $culinaryCount,
@@ -135,6 +168,7 @@ class AdminController extends Controller
             'unreadNotificationCount' => $unreadNotificationCount,
             'recentBookings' => $recentBookings,
             'recentPendingProviders' => $recentPendingProviders,
+            'placeTypeStats' => $placeTypeStats,
         ]);
     }
 
@@ -621,15 +655,16 @@ class AdminController extends Controller
             'longitude' => ['nullable', 'numeric'],
             'price_option' => ['required', 'in:gratis,berbayar'],
             'price_custom' => ['nullable', 'numeric', 'min:0'],
+            'image_url' => ['nullable', 'string'],
             'image_files.*' => ['nullable', 'image', 'max:4096'],
             'transport_modes' => ['nullable', 'array'],
             'transport_modes.*' => ['string', 'max:50'],
             'status_lokasi' => ['required', 'in:terkenal,hidden gem'],
             'description' => $descriptionRule,
             'operational_schedule' => ['nullable', 'array'],
-            'operational_schedule.*.status' => ['nullable', 'in:open,closed'],
-            'operational_schedule.*.open_time' => ['nullable', 'date_format:H:i'],
-            'operational_schedule.*.close_time' => ['nullable', 'date_format:H:i'],
+            'operational_schedule.*.status' => ['nullable', 'in:open,full_day,closed'],
+            'operational_schedule.*.open_time' => ['nullable', 'string'],
+            'operational_schedule.*.close_time' => ['nullable', 'string'],
         ];
 
         if ($isCulinary) {
@@ -661,12 +696,14 @@ class AdminController extends Controller
         $place->deskripsi = $data['description'] ?? null;
         $place->fasilitas = $amenities;
         $place->alamat = $this->encodeAddress($data['place_address'], $data['province'] ?? null);
-        $place->latitude = $data['latitude'] ?? null;
-        $place->longitude = $data['longitude'] ?? null;
+        $place->latitude = $this->normalizeLatitude($data['latitude'] ?? null);
+        $place->longitude = $this->normalizeLongitude($data['longitude'] ?? null);
         $place->transportasi = $transport;
         $place->hari_operasional = $this->serializeSchedule($data['operational_schedule'] ?? []);
 
-        if (!empty($data['image_files'])) {
+        if (!empty($data['image_url'])) {
+            $place->gambar = $data['image_url'];
+        } elseif (!empty($data['image_files'])) {
             $paths = [];
 
             foreach ($data['image_files'] as $image) {
@@ -679,6 +716,36 @@ class AdminController extends Controller
         }
 
         $place->save();
+    }
+
+    private function normalizeLatitude($val): ?float
+    {
+        if ($val === null || $val === '') {
+            return null;
+        }
+
+        $num = (float) $val;
+
+        while (abs($num) > 90) {
+            $num /= 10;
+        }
+
+        return round($num, 7);
+    }
+
+    private function normalizeLongitude($val): ?float
+    {
+        if ($val === null || $val === '') {
+            return null;
+        }
+
+        $num = (float) $val;
+
+        while (abs($num) > 180) {
+            $num /= 10;
+        }
+
+        return round($num, 7);
     }
 
     private function serializeSchedule(array $schedule): ?string
@@ -696,6 +763,8 @@ class AdminController extends Controller
                 $open = $item['open_time'] ?? '00:00';
                 $close = $item['close_time'] ?? '23:59';
                 $rows[] = $day . ':' . $open . '-' . $close;
+            } elseif ($status === 'full_day') {
+                $rows[] = $day . ':00:00-23:59';
             } else {
                 $rows[] = $day . ':closed';
             }
