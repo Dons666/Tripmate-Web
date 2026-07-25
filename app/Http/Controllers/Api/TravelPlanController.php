@@ -58,7 +58,7 @@ class TravelPlanController extends Controller
      */
     public function show(Request $request, string $id)
     {
-        $plan = TravelPlan::with(['destinasis', 'expenses', 'schedules.destinasi:id,nama_destinasi,kota,gambar'])
+        $plan = TravelPlan::with(['destinasis', 'expenses', 'schedules.destinasi:id,nama_destinasi,kota,gambar', 'travel.destinasis'])
             ->where('user_id', $request->user()->id)
             ->findOrFail($id);
 
@@ -121,6 +121,123 @@ class TravelPlanController extends Controller
         return response()->json([
             'status'  => 'success',
             'message' => 'Destinasi dihapus dari rencana.',
+        ]);
+    }
+
+    /**
+     * Pasang agen travel ke rencana perjalanan.
+     */
+    public function attachTravel(Request $request, string $id)
+    {
+        $request->validate([
+            'travel_id' => 'nullable|exists:travels,id',
+            'jumlah_peserta' => 'nullable|integer|min:1',
+        ]);
+
+        $plan = TravelPlan::where('user_id', $request->user()->id)
+            ->findOrFail($id);
+
+        $plan->update([
+            'travel_id' => $request->travel_id ?: null,
+            'jumlah_peserta' => $request->jumlah_peserta ?: 1,
+        ]);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => $request->travel_id 
+                ? 'Mitra Agen Travel berhasil dipasang pada rencana perjalanan!' 
+                : 'Agen Travel dilepas dari rencana perjalanan.',
+            'plan'    => $plan,
+        ]);
+    }
+
+    /**
+     * Checkout rencana perjalanan dengan upload bukti pembayaran.
+     */
+    public function checkoutTravel(Request $request, string $id)
+    {
+        $plan = TravelPlan::where('user_id', $request->user()->id)
+            ->findOrFail($id);
+
+        if (!$plan->travel_id) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Checkout hanya tersedia jika Rencana Perjalanan menggunakan Agen Travel.',
+            ], 400);
+        }
+
+        $request->validate([
+            'metode_pembayaran' => 'required|string',
+            'payment_proof'     => 'required|image|max:2048',
+        ]);
+
+        $proofPath = null;
+        if ($request->hasFile('payment_proof')) {
+            $proofPath = $request->file('payment_proof')->store('payment-proofs', 'public');
+        }
+
+        $plan->update([
+            'is_checkout' => true,
+            'payment_method' => $request->metode_pembayaran,
+            'payment_proof' => $proofPath,
+            'payment_status' => 'pending_admin',
+            'trip_status' => 'pending',
+            'status' => 'Menunggu Konfirmasi',
+        ]);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Pembayaran Checkout Paket Travel berhasil diajukan! Menunggu verifikasi Admin.',
+            'plan'    => $plan,
+        ]);
+    }
+
+    /**
+     * Pesan paket travel langsung ke rencana perjalanan baru.
+     */
+    public function bookPackage(Request $request)
+    {
+        $request->validate([
+            'travel_id'      => 'required|exists:travels,id',
+            'jumlah_peserta' => 'required|integer|min:1',
+        ]);
+
+        $travel = \App\Models\Travel::findOrFail($request->travel_id);
+
+        $plan = $request->user()->travelPlans()->create([
+            'nama_perjalanan' => 'Trip ' . $travel->nama_travel,
+            'tujuan'          => $travel->kota,
+            'tanggal_mulai'   => $travel->tanggal_keberangkatan,
+            'tanggal_selesai' => $travel->tanggal_keberangkatan,
+            'budget'          => $travel->harga_paket * $request->jumlah_peserta,
+            'travel_id'       => $travel->id,
+            'jumlah_peserta'  => $request->jumlah_peserta,
+            'status'          => 'planning',
+        ]);
+
+        $plan->load('travel', 'user');
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Paket travel berhasil dipesan langsung ke rencana baru!',
+            'plan'    => $plan,
+        ], 201);
+    }
+
+    /**
+     * Selesaikan travel plan (rencana mandiri).
+     */
+    public function complete(Request $request, string $id)
+    {
+        $plan = TravelPlan::where('user_id', $request->user()->id)
+            ->findOrFail($id);
+
+        $plan->update(['status' => 'Selesai']);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Selamat! Perjalanan Anda telah selesai.',
+            'plan'    => $plan,
         ]);
     }
 }

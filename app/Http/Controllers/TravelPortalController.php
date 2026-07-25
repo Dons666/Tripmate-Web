@@ -67,6 +67,7 @@ class TravelPortalController extends Controller
         $travelPlan->update([
             'trip_status'   => 'completed',
             'trip_ended_at' => now(),
+            'status'        => 'Selesai',
         ]);
 
         // Notifikasi ke Pemesan (User)

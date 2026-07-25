@@ -174,6 +174,139 @@
                     <p>Struk ini dibuat secara otomatis oleh sistem Tripmate Web & Mobile Integration.</p>
                 </div>
             </div>
+
+            <!-- RATING SECTION -->
+            <div class="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 shadow-xl no-print mt-6 space-y-6">
+                <div>
+                    <h3 class="text-xl font-extrabold text-slate-900">Beri Ulasan Perjalanan Anda ⭐</h3>
+                    <p class="text-xs text-slate-500 mt-1">Ulasan Anda membantu kami meningkatkan kualitas destinasi dan layanan travel di TripMate.</p>
+                </div>
+
+                <div class="divide-y divide-slate-100 space-y-6">
+                    @if($travelPlan->travel)
+                        <!-- Rate Travel Package -->
+                        @php
+                            $travelRating = $userRatings->where('travel_id', $travelPlan->travel_id)->first();
+                        @endphp
+                        <div class="pt-6 first:pt-0">
+                            <div class="flex items-center justify-between flex-wrap gap-4">
+                                <div>
+                                    <h4 class="font-bold text-slate-800">🚌 Agen Travel: {{ $travelPlan->travel->nama_travel }}</h4>
+                                    <p class="text-xs text-slate-400">Berikan penilaian Anda terhadap pelayanan Agen Travel ini.</p>
+                                </div>
+                                <form action="{{ route('ratings.store', ['type' => 'travel', 'id' => $travelPlan->travel_id]) }}" method="POST" class="w-full sm:w-auto mt-2">
+                                    @csrf
+                                    <div class="flex items-center gap-3">
+                                        <!-- Star inputs -->
+                                        <div class="flex gap-1" x-data="{ currentRating: {{ $travelRating ? $travelRating->skor_rating : 0 }}, hoverRating: 0 }">
+                                            @for($i = 1; $i <= 5; $i++)
+                                                <label class="cursor-pointer">
+                                                    <input type="radio" name="rating" value="{{ $i }}" class="sr-only" {{ ($travelRating && $travelRating->skor_rating == $i) ? 'checked' : '' }} required>
+                                                    <svg class="w-7 h-7 transition" 
+                                                         :class="(hoverRating || currentRating) >= {{ $i }} ? 'text-amber-400 fill-amber-400' : 'text-slate-300'"
+                                                         @click="currentRating = {{ $i }}"
+                                                         @mouseover="hoverRating = {{ $i }}"
+                                                         @mouseleave="hoverRating = 0"
+                                                         fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.907c.961 0 1.36 1.246.582 1.817l-3.97 2.883a1 1 0 00-.364 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.971-2.883a1 1 0 00-1.17 0l-3.97 2.883c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.364-1.118L2.98 9.42c-.778-.57-.38-1.817.583-1.817h4.906a1 1 0 00.95-.69l1.519-4.674z" />
+                                                    </svg>
+                                                </label>
+                                            @endfor
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 flex gap-2">
+                                        <input type="text" name="review" value="{{ $travelRating ? $travelRating->komentar : '' }}" placeholder="Tulis ulasan Anda..." class="w-full text-xs rounded-xl border-slate-200 focus:ring-sky-500 focus:border-sky-500 py-1.5">
+                                        <button type="submit" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl shadow-sm transition">Kirim</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Rate Destinasi yang Disediakan Paket -->
+                        @if($travelPlan->travel->destinasis && $travelPlan->travel->destinasis->count() > 0)
+                            @foreach($travelPlan->travel->destinasis as $d)
+                                @php
+                                    $destRating = $userRatings->where('destinasi_id', $d->id)->first();
+                                @endphp
+                                <div class="pt-6 border-t border-slate-100">
+                                    <div class="flex items-center justify-between flex-wrap gap-4">
+                                        <div>
+                                            <h4 class="font-bold text-slate-800">📍 {{ $d->nama_destinasi }} ({{ $d->kota }})</h4>
+                                            <p class="text-xs text-slate-400">Berikan penilaian Anda untuk destinasi ini.</p>
+                                        </div>
+                                        <form action="{{ route('ratings.store', ['type' => 'destination', 'id' => $d->id]) }}" method="POST" class="w-full sm:w-auto mt-2">
+                                            @csrf
+                                            <div class="flex items-center gap-3">
+                                                <div class="flex gap-1" x-data="{ currentRating: {{ $destRating ? $destRating->skor_rating : 0 }}, hoverRating: 0 }">
+                                                    @for($i = 1; $i <= 5; $i++)
+                                                        <label class="cursor-pointer">
+                                                            <input type="radio" name="rating" value="{{ $i }}" class="sr-only" {{ ($destRating && $destRating->skor_rating == $i) ? 'checked' : '' }} required>
+                                                            <svg class="w-7 h-7 transition" 
+                                                                 :class="(hoverRating || currentRating) >= {{ $i }} ? 'text-amber-400 fill-amber-400' : 'text-slate-300'"
+                                                                 @click="currentRating = {{ $i }}"
+                                                                 @mouseover="hoverRating = {{ $i }}"
+                                                                 @mouseleave="hoverRating = 0"
+                                                                 fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.907c.961 0 1.36 1.246.582 1.817l-3.97 2.883a1 1 0 00-.364 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.971-2.883a1 1 0 00-1.17 0l-3.97 2.883c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.364-1.118L2.98 9.42c-.778-.57-.38-1.817.583-1.817h4.906a1 1 0 00.95-.69l1.519-4.674z" />
+                                                            </svg>
+                                                        </label>
+                                                    @endfor
+                                                </div>
+                                            </div>
+                                            <div class="mt-3 flex gap-2">
+                                                <input type="text" name="review" value="{{ $destRating ? $destRating->komentar : '' }}" placeholder="Tulis ulasan Anda..." class="w-full text-xs rounded-xl border-slate-200 focus:ring-sky-500 focus:border-sky-500 py-1.5">
+                                                <button type="submit" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl shadow-sm transition">Kirim</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
+
+                    @else
+                        <!-- Rate Destinasi Rencana Mandiri -->
+                        @if($travelPlan->destinasis && $travelPlan->destinasis->count() > 0)
+                            @foreach($travelPlan->destinasis as $d)
+                                @php
+                                    $destRating = $userRatings->where('destinasi_id', $d->id)->first();
+                                @endphp
+                                <div class="pt-6 first:pt-0 border-t border-slate-100 first:border-0">
+                                    <div class="flex items-center justify-between flex-wrap gap-4">
+                                        <div>
+                                            <h4 class="font-bold text-slate-800">📍 {{ $d->nama_destinasi }} ({{ $d->kota }})</h4>
+                                            <p class="text-xs text-slate-400">Berikan penilaian Anda untuk destinasi ini.</p>
+                                        </div>
+                                        <form action="{{ route('ratings.store', ['type' => 'destination', 'id' => $d->id]) }}" method="POST" class="w-full sm:w-auto mt-2">
+                                            @csrf
+                                            <div class="flex items-center gap-3">
+                                                <div class="flex gap-1" x-data="{ currentRating: {{ $destRating ? $destRating->skor_rating : 0 }}, hoverRating: 0 }">
+                                                    @for($i = 1; $i <= 5; $i++)
+                                                        <label class="cursor-pointer">
+                                                            <input type="radio" name="rating" value="{{ $i }}" class="sr-only" {{ ($destRating && $destRating->skor_rating == $i) ? 'checked' : '' }} required>
+                                                            <svg class="w-7 h-7 transition" 
+                                                                 :class="(hoverRating || currentRating) >= {{ $i }} ? 'text-amber-400 fill-amber-400' : 'text-slate-300'"
+                                                                 @click="currentRating = {{ $i }}"
+                                                                 @mouseover="hoverRating = {{ $i }}"
+                                                                 @mouseleave="hoverRating = 0"
+                                                                 fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.907c.961 0 1.36 1.246.582 1.817l-3.97 2.883a1 1 0 00-.364 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.971-2.883a1 1 0 00-1.17 0l-3.97 2.883c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.364-1.118L2.98 9.42c-.778-.57-.38-1.817.583-1.817h4.906a1 1 0 00.95-.69l1.519-4.674z" />
+                                                            </svg>
+                                                        </label>
+                                                    @endfor
+                                                </div>
+                                            </div>
+                                            <div class="mt-3 flex gap-2">
+                                                <input type="text" name="review" value="{{ $destRating ? $destRating->komentar : '' }}" placeholder="Tulis ulasan Anda..." class="w-full text-xs rounded-xl border-slate-200 focus:ring-sky-500 focus:border-sky-500 py-1.5">
+                                                <button type="submit" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs rounded-xl shadow-sm transition">Kirim</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 </x-app-layout>
