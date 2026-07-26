@@ -48,8 +48,8 @@ class TravelPlanController extends Controller
 
     public function show(TravelPlan $travelPlan)
     {
-        if ($travelPlan->user_id !== Auth::id()) {
-            abort(403);
+        if ($travelPlan->user_id !== Auth::id() && (!Auth::check() || !Auth::user()->isAdmin())) {
+            abort(403, 'Anda tidak memiliki hak akses untuk melihat Rencana Perjalanan milik pengguna lain.');
         }
 
         $travelPlan->load('destinasis', 'expenses', 'schedules.destinasi');
@@ -59,7 +59,7 @@ class TravelPlanController extends Controller
     public function attachTravel(Request $request, TravelPlan $travelPlan)
     {
         if ($travelPlan->user_id !== Auth::id()) {
-            abort(403);
+            abort(403, 'Anda tidak memiliki hak akses untuk mengubah Rencana Perjalanan ini.');
         }
 
         $request->validate([
@@ -78,7 +78,7 @@ class TravelPlanController extends Controller
     public function checkout(TravelPlan $travelPlan)
     {
         if ($travelPlan->user_id !== Auth::id()) {
-            abort(403);
+            abort(403, 'Anda tidak memiliki hak akses untuk melakukan checkout Rencana Perjalanan ini.');
         }
 
         if (!$travelPlan->travel_id) {
@@ -94,7 +94,7 @@ class TravelPlanController extends Controller
     public function processCheckout(Request $request, TravelPlan $travelPlan)
     {
         if ($travelPlan->user_id !== Auth::id()) {
-            abort(403);
+            abort(403, 'Anda tidak memiliki hak akses untuk memproses checkout Rencana Perjalanan ini.');
         }
 
         if (!$travelPlan->travel_id) {
@@ -130,7 +130,7 @@ class TravelPlanController extends Controller
         $request->validate(['destinasi_id' => 'required|exists:destinasi,id']);
 
         if ($travelPlan->user_id !== Auth::id()) {
-            abort(403);
+            abort(403, 'Anda tidak memiliki hak akses untuk menambah destinasi ke Rencana Perjalanan ini.');
         }
 
         if ($travelPlan->destinasis()->where('destinasi_id', $request->destinasi_id)->exists()) {
@@ -195,7 +195,7 @@ class TravelPlanController extends Controller
     public function removeDestinasi(TravelPlan $travelPlan, Destinasi $destinasi)
     {
         if ($travelPlan->user_id !== Auth::id()) {
-            abort(403);
+            abort(403, 'Anda tidak memiliki hak akses untuk menghapus destinasi dari Rencana Perjalanan ini.');
         }
 
         $travelPlan->destinasis()->detach($destinasi->id);
@@ -205,7 +205,7 @@ class TravelPlanController extends Controller
     public function destroy(TravelPlan $travelPlan)
     {
         if ($travelPlan->user_id !== Auth::id()) {
-            abort(403);
+            abort(403, 'Anda tidak memiliki hak akses untuk menghapus Rencana Perjalanan ini.');
         }
 
         if ($travelPlan->foto_sampul && Storage::disk('public')->exists($travelPlan->foto_sampul)) {
@@ -219,7 +219,7 @@ class TravelPlanController extends Controller
     public function complete(TravelPlan $travelPlan)
     {
         if ($travelPlan->user_id !== Auth::id()) {
-            abort(403);
+            abort(403, 'Anda tidak memiliki hak akses untuk menyelesaikan Rencana Perjalanan ini.');
         }
 
         $travelPlan->update(['status' => 'Selesai']);
@@ -230,8 +230,8 @@ class TravelPlanController extends Controller
 
     public function receipt(TravelPlan $travelPlan)
     {
-        if ($travelPlan->user_id !== Auth::id()) {
-            abort(403);
+        if ($travelPlan->user_id !== Auth::id() && (!Auth::check() || !Auth::user()->isAdmin())) {
+            abort(403, 'Anda tidak memiliki hak akses untuk melihat Struk Rencana Perjalanan milik pengguna lain.');
         }
 
         $travelPlan->load('destinasis', 'expenses', 'schedules.destinasi', 'travel');
