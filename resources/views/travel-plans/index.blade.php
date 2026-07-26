@@ -129,7 +129,7 @@
                         <a href="{{ route('travel-plans.show', $plan->id) }}" class="block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition group">
                             @if($plan->foto_sampul)
                                 <div class="h-28 w-full overflow-hidden">
-                                    <img src="{{ Storage::url($plan->foto_sampul) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    <img src="{{ str_starts_with($plan->foto_sampul, 'http') ? $plan->foto_sampul : asset('storage/' . ltrim(str_replace(['public/', 'storage/'], '', $plan->foto_sampul), '/')) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                 </div>
                             @else
                                 <div class="h-28 w-full bg-gradient-to-br from-sky-100 to-sky-50 flex items-center justify-center">
@@ -212,7 +212,7 @@
                         <a href="{{ route('travel-plans.show', $plan->id) }}" class="block bg-white rounded-2xl shadow-sm border border-green-100 overflow-hidden hover:shadow-md transition group">
                             @if($plan->foto_sampul)
                                 <div class="h-24 w-full overflow-hidden relative">
-                                    <img src="{{ Storage::url($plan->foto_sampul) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 grayscale-[30%]">
+                                    <img src="{{ str_starts_with($plan->foto_sampul, 'http') ? $plan->foto_sampul : asset('storage/' . ltrim(str_replace(['public/', 'storage/'], '', $plan->foto_sampul), '/')) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 grayscale-[30%]">
                                     <div class="absolute inset-0 bg-gradient-to-t from-white/60 to-transparent"></div>
                                 </div>
                             @else
