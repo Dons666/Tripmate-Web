@@ -10,6 +10,18 @@
                 <div class="bg-green-50 border border-green-200 text-green-700 p-3 rounded-xl text-sm font-medium">✅ {{ session('success') }}</div>
             @endif
 
+            @if($travelPlan->foto_sampul)
+                <div class="relative w-full h-56 md:h-72 rounded-3xl overflow-hidden shadow-md border border-slate-200">
+                    <img src="{{ str_starts_with($travelPlan->foto_sampul, 'http') ? $travelPlan->foto_sampul : asset('storage/' . ltrim(str_replace(['public/', 'storage/'], '', $travelPlan->foto_sampul), '/')) }}" class="w-full h-full object-cover" alt="{{ $travelPlan->nama_perjalanan }}">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent flex items-end p-6 md:p-8">
+                        <div>
+                            <span class="px-3 py-1 bg-sky-500/80 backdrop-blur-md text-white text-xs font-bold rounded-full uppercase tracking-wider">Foto Sampul Rencana</span>
+                            <h1 class="text-2xl md:text-4xl font-extrabold text-white mt-2 drop-shadow-md">{{ $travelPlan->nama_perjalanan }}</h1>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Tombol Aksi -->
             <div class="flex flex-wrap justify-end gap-3">
                 <a href="{{ route('rute.dijkstra') }}" class="text-sm text-sky-700 hover:text-sky-800 font-semibold flex items-center gap-1.5 bg-sky-50 border border-sky-200 px-4 py-2 rounded-xl hover:bg-sky-100 transition">
