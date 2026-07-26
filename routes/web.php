@@ -28,15 +28,38 @@ use App\Http\Controllers\TravelPortalController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::post('/appeal', [AppealController::class, 'store'])->name('appeal.store');
 
-// Direct Storage File Server Fallback for Hosting (cPanel / Domnesia)
+// Direct Storage File Server Fallback for Hosting (cPanel / Linux Case-Sensitivity Fix)
 Route::get('/storage/{path}', function ($path) {
-    $filePath = storage_path('app/public/' . $path);
+    $cleanPath = ltrim(str_replace(['public/', 'storage/'], '', $path), '/');
 
-    if (!file_exists($filePath)) {
-        abort(404);
+    $possiblePaths = [
+        storage_path('app/public/' . $cleanPath),
+        storage_path('app/' . $cleanPath),
+        public_path('storage/' . $cleanPath),
+    ];
+
+    foreach ($possiblePaths as $filePath) {
+        if (file_exists($filePath) && !is_dir($filePath)) {
+            return response()->file($filePath);
+        }
     }
 
-    return response()->file($filePath);
+    // Case-insensitive fallback for Linux OS
+    $dirName = dirname($cleanPath);
+    $fileName = basename($cleanPath);
+    $searchDir = storage_path('app/public/' . ($dirName !== '.' ? $dirName : ''));
+
+    if (is_dir($searchDir)) {
+        $files = scandir($searchDir);
+        foreach ($files as $file) {
+            if (strtolower($file) === strtolower($fileName)) {
+                $filePath = $searchDir . '/' . $file;
+                return response()->file($filePath);
+            }
+        }
+    }
+
+    abort(404);
 })->where('path', '.*');
 
 Route::get('/penyedia-travel', [PenyediaTravelController::class, 'index'])->name('penyedia-travel.index');
