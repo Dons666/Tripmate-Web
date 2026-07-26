@@ -21,11 +21,11 @@ class HomeController extends Controller
 
     public function index(Request $request)
     {
-        if (Auth::check() && Auth::user()->role === 'admin') {
+        if (Auth::check() && Auth::user()->isAdmin()) {
             return redirect()->route('admin.dashboard');
         }
 
-        if (Auth::check() && Auth::user()->role === 'travel') {
+        if (Auth::check() && Auth::user()->isTravel()) {
             return redirect()->route('travel.dashboard');
         }
 

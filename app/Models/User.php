@@ -56,6 +56,11 @@ class User extends Authenticatable
         return $this->hasMany(SearchHistory::class);
     }
 
+    public function getRoleAttribute($value): string
+    {
+        return strtolower(trim((string) $value));
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
