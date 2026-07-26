@@ -26,7 +26,7 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ], // <-- Tanda kurung ini ditutup di sini
-            'avatar' => ['nullable', 'image', 'max:2048'], // <-- Baru dimasukkan di luar kurung email
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:10240'], // <-- Max 10MB
         ];
     }
 }
