@@ -42,13 +42,17 @@ class ProfileController extends Controller
 
         // 4. Handle Avatar Upload secara terpisah
         if ($request->hasFile('avatar')) {
+            $dir = storage_path('app/public/avatars');
+            if (!file_exists($dir)) {
+                @mkdir($dir, 0755, true);
+            }
+
             // Hapus foto lama jika ada
             if ($user->avatar && Storage::exists('public/' . $user->avatar)) {
                 Storage::delete('public/' . $user->avatar);
             }
 
             // Simpan foto baru ke folder 'storage/app/public/avatars'
-            // Hasilnya akan menjadi: 'avatars/namafile.jpg'
             $path = $request->file('avatar')->store('avatars', 'public');
             
             // Simpan path yang benar ke database

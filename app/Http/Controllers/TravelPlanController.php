@@ -27,13 +27,17 @@ class TravelPlanController extends Controller
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'budget'          => 'nullable|numeric|min:0',
             'status'          => 'nullable|string|in:Perencanaan Aktif,Sedang Berjalan,Selesai,Dibatalkan',
-            'foto_sampul'     => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'foto_sampul'     => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:10240',
             'travel_id'       => 'nullable|exists:travels,id',
         ]);
 
         $data = $request->except('_token');
 
         if ($request->hasFile('foto_sampul')) {
+            $dir = storage_path('app/public/travel-covers');
+            if (!file_exists($dir)) {
+                @mkdir($dir, 0755, true);
+            }
             $data['foto_sampul'] = $request->file('foto_sampul')->store('travel-covers', 'public');
         }
 
