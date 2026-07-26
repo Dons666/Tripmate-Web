@@ -34,7 +34,7 @@
         </h1>
 
         <p class="text-slate-300 text-sm sm:text-base mb-8 leading-relaxed">
-            {{ $exception->getMessage() ?: 'Halaman ini hanya dapat diakses oleh akun dengan role Admin. Silakan pastikan Anda telah login menggunakan akun Admin.' }}
+            {{ $exception->getMessage() ?: 'Anda tidak memiliki hak akses (izin) untuk membuka halaman ini.' }}
         </p>
 
         <!-- Actions -->

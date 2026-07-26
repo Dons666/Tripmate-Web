@@ -19,7 +19,7 @@ class ExpenseController extends Controller
         ]);
 
         // Cek apakah travel plan milik user yang login
-        if ($travelPlan->user_id !== Auth::id()) {
+        if ((int) $travelPlan->user_id !== (int) Auth::id()) {
             abort(403, 'Anda tidak memiliki akses ke rencana perjalanan ini.');
         }
 
@@ -37,8 +37,8 @@ class ExpenseController extends Controller
 
     public function destroy(Expense $expense)
     {
-        if ($expense->user_id !== Auth::id()) {
-            abort(403);
+        if ((int) $expense->user_id !== (int) Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses untuk menghapus pengeluaran ini.');
         }
 
         $expense->delete();
