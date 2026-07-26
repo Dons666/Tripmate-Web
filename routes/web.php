@@ -28,6 +28,17 @@ use App\Http\Controllers\TravelPortalController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::post('/appeal', [AppealController::class, 'store'])->name('appeal.store');
 
+// Direct Storage File Server Fallback for Hosting (cPanel / Domnesia)
+Route::get('/storage/{path}', function ($path) {
+    $filePath = storage_path('app/public/' . $path);
+
+    if (!file_exists($filePath)) {
+        abort(404);
+    }
+
+    return response()->file($filePath);
+})->where('path', '.*');
+
 Route::get('/penyedia-travel', [PenyediaTravelController::class, 'index'])->name('penyedia-travel.index');
 Route::get('/penyedia-travel/register', [PenyediaTravelController::class, 'create'])->name('penyedia-travel.create');
 Route::post('/penyedia-travel/register', [PenyediaTravelController::class, 'store'])->name('penyedia-travel.store');
