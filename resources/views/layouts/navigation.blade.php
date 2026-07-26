@@ -131,7 +131,10 @@
 
                     <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 hover:opacity-80 transition">
                         @if(Auth::user()->avatar)
-                            <img src="{{ str_starts_with(Auth::user()->avatar, 'http') ? Auth::user()->avatar : asset('storage/' . ltrim(str_replace(['public/', 'storage/'], '', Auth::user()->avatar), '/')) }}" alt="Avatar" class="w-8 h-8 rounded-full object-cover border-2 border-sky-100 shadow-sm">
+                            <img src="{{ str_starts_with(Auth::user()->avatar, 'http') ? Auth::user()->avatar : asset('storage/' . ltrim(str_replace(['public/', 'storage/'], '', Auth::user()->avatar), '/')) }}" alt="Avatar" class="w-8 h-8 rounded-full object-cover border-2 border-sky-100 shadow-sm" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="w-8 h-8 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-xs font-bold border-2 border-white shadow-sm" style="display:none;">
+                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                            </div>
                         @else
                             <div class="w-8 h-8 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-xs font-bold border-2 border-white shadow-sm">
                                 {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
