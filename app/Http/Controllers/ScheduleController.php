@@ -14,8 +14,8 @@ class ScheduleController extends Controller
      */
     public function store(Request $request, TravelPlan $travelPlan)
     {
-        if ($travelPlan->user_id !== Auth::id()) {
-            abort(403);
+        if ((int) $travelPlan->user_id !== (int) Auth::id()) {
+            abort(403, 'Anda tidak memiliki hak akses untuk menambah jadwal pada rencana ini.');
         }
 
         $request->validate([
@@ -44,8 +44,8 @@ class ScheduleController extends Controller
      */
     public function destroy(Schedule $schedule)
     {
-        if ($schedule->travelPlan->user_id !== Auth::id()) {
-            abort(403);
+        if ((int) $schedule->travelPlan->user_id !== (int) Auth::id()) {
+            abort(403, 'Anda tidak memiliki hak akses untuk menghapus jadwal ini.');
         }
 
         $schedule->delete();

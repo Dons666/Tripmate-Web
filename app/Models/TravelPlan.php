@@ -30,6 +30,8 @@ class TravelPlan extends Model
     ];
 
     protected $casts = [
+        'user_id'            => 'integer',
+        'travel_id'          => 'integer',
         'tanggal_mulai'      => 'date',
         'tanggal_selesai'    => 'date',
         'is_checkout'        => 'boolean',
