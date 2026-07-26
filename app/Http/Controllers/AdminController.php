@@ -702,15 +702,33 @@ class AdminController extends Controller
         $place->hari_operasional = $this->serializeSchedule($data['operational_schedule'] ?? []);
 
         if (!empty($data['image_url'])) {
-            $place->gambar = $data['image_url'];
-        } elseif (!empty($data['image_files'])) {
+            $place->gambar = trim($data['image_url']);
+        } elseif (!empty($data['image_files']) && is_array($data['image_files'])) {
             $paths = [];
-
-            foreach ($data['image_files'] as $image) {
-                $paths[] = $image->store('destinasi-images', 'public');
+            $dir = storage_path('app/public/destinasi-images');
+            if (!file_exists($dir)) {
+                @mkdir($dir, 0755, true);
             }
 
-            $place->gambar = json_encode($paths);
+            foreach ($data['image_files'] as $image) {
+                if ($image && $image->isValid()) {
+                    $storedPath = $image->store('destinasi-images', 'public');
+                    $paths[] = $storedPath;
+
+                    // Dual-store copy to public_path
+                    try {
+                        $publicCopy = public_path('storage/' . $storedPath);
+                        @mkdir(dirname($publicCopy), 0755, true);
+                        @copy(storage_path('app/public/' . $storedPath), $publicCopy);
+                    } catch (\Throwable $e) {}
+                }
+            }
+
+            if (count($paths) === 1) {
+                $place->gambar = $paths[0];
+            } elseif (count($paths) > 1) {
+                $place->gambar = json_encode($paths);
+            }
         } elseif ($isCreate) {
             $place->gambar = $place->gambar ?: null;
         }
