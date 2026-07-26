@@ -6,6 +6,7 @@
 !/public/storage/.gitkeep
 !/public/storage/avatars/.gitkeep
 !/public/storage/travel-covers/.gitkeep
+!/public/storage/travel_docs/foto_kendaraan/.gitkeep
 /storage/*.key
 /storage/pail
 /vendor

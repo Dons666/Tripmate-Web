@@ -35,7 +35,10 @@
                         $firstFoto = is_array($fotoKendaraan) ? $fotoKendaraan[0] ?? null : $penyediaTravel->foto_kendaraan;
                     @endphp
                     @if(!empty($firstFoto))
-                        <img src="{{ str_starts_with($firstFoto, 'http') ? $firstFoto : asset('storage/' . $firstFoto) }}" alt="" class="w-20 h-20 rounded-2xl object-cover border-2 border-white/20 shadow-md">
+                        <img src="{{ str_starts_with($firstFoto, 'http') ? $firstFoto : asset('storage/' . ltrim(str_replace(['public/', 'storage/'], '', $firstFoto), '/')) }}" alt="" class="w-20 h-20 rounded-2xl object-cover border-2 border-white/20 shadow-md" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                        <div class="w-20 h-20 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-3xl font-black" style="display:none;">
+                            🚌
+                        </div>
                     @else
                         <div class="w-20 h-20 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-3xl font-black">
                             🚌
@@ -137,7 +140,7 @@
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             @foreach($fotoArmada as $img)
                                 <div class="relative group rounded-2xl overflow-hidden border border-slate-200 aspect-video">
-                                    <img src="{{ str_starts_with($img, 'http') ? $img : asset('storage/' . $img) }}" alt="Armada" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                                    <img src="{{ str_starts_with($img, 'http') ? $img : asset('storage/' . ltrim(str_replace(['public/', 'storage/'], '', $img), '/')) }}" alt="Armada" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                                 </div>
                             @endforeach
                         </div>

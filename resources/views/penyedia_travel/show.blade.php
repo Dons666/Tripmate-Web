@@ -28,7 +28,7 @@
                 <!-- Cover Image & Header Hero -->
                 <div class="w-full h-80 sm:h-[420px] bg-slate-900 relative">
                     @if($travel->gambar)
-                        <img src="{{ str_starts_with($travel->gambar, 'http') ? $travel->gambar : asset('storage/' . $travel->gambar) }}" alt="{{ $travel->nama_travel }}" class="w-full h-full object-cover">
+                        <img src="{{ str_starts_with($travel->gambar, 'http') ? $travel->gambar : asset('storage/' . ltrim(str_replace(['public/', 'storage/'], '', $travel->gambar), '/')) }}" alt="{{ $travel->nama_travel }}" class="w-full h-full object-cover" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
                     @else
                         <div class="w-full h-full bg-gradient-to-br from-slate-900 via-sky-950 to-slate-900 flex flex-col items-center justify-center text-slate-400 gap-2">
                             <span class="text-6xl">🎒</span>
@@ -130,7 +130,7 @@
                                                     @foreach($group['items'] as $destinasi)
                                                         <div class="p-3.5 rounded-2xl border border-slate-200 bg-white shadow-sm flex items-center gap-3 hover:border-sky-300 transition">
                                                             @if($destinasi->gambar)
-                                                                <img src="{{ str_starts_with($destinasi->gambar, 'http') ? $destinasi->gambar : asset('storage/' . $destinasi->gambar) }}" class="w-12 h-12 rounded-xl object-cover shrink-0">
+                                                                <img src="{{ str_starts_with($destinasi->gambar, 'http') ? $destinasi->gambar : asset('storage/' . ltrim(str_replace(['public/', 'storage/'], '', $destinasi->gambar), '/')) }}" class="w-12 h-12 rounded-xl object-cover shrink-0" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
                                                             @else
                                                                 <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-xl shrink-0">📍</div>
                                                             @endif

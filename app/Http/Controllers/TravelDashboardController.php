@@ -95,7 +95,13 @@ class TravelDashboardController extends Controller
             $uploadedFiles = $request->file('foto_armada');
             foreach ($uploadedFiles as $index => $file) {
                 if ($file && $file->isValid()) {
-                    $fotoArmadaPaths[$index] = $file->store('travel_docs/foto_kendaraan', 'public');
+                    $storedPath = $file->store('travel_docs/foto_kendaraan', 'public');
+                    $fotoArmadaPaths[$index] = $storedPath;
+                    try {
+                        $publicCopy = public_path('storage/' . $storedPath);
+                        @mkdir(dirname($publicCopy), 0755, true);
+                        @copy(storage_path('app/public/' . $storedPath), $publicCopy);
+                    } catch (\Throwable $e) {}
                 } elseif (isset($existingFotos[$index]) && !empty($existingFotos[$index])) {
                     $fotoArmadaPaths[$index] = $existingFotos[$index];
                 }
@@ -113,7 +119,13 @@ class TravelDashboardController extends Controller
             ksort($fotoArmadaPaths);
             $validated['foto_kendaraan'] = json_encode(array_values($fotoArmadaPaths));
         } elseif ($request->hasFile('foto_kendaraan')) {
-            $validated['foto_kendaraan'] = $request->file('foto_kendaraan')->store('travel_docs/foto_kendaraan', 'public');
+            $storedPath = $request->file('foto_kendaraan')->store('travel_docs/foto_kendaraan', 'public');
+            $validated['foto_kendaraan'] = $storedPath;
+            try {
+                $publicCopy = public_path('storage/' . $storedPath);
+                @mkdir(dirname($publicCopy), 0755, true);
+                @copy(storage_path('app/public/' . $storedPath), $publicCopy);
+            } catch (\Throwable $e) {}
         }
 
         // Handle File Upload for Surat Izin Usaha jika diunggah baru

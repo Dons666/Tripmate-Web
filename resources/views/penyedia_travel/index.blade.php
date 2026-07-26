@@ -79,7 +79,7 @@
                     <!-- Cover Photo Header -->
                     <a href="{{ route('penyedia-travel.show', $package->id) }}" class="relative h-52 bg-slate-900 overflow-hidden block">
                         @if($package->gambar)
-                            <img src="{{ str_starts_with($package->gambar, 'http') ? $package->gambar : asset('storage/' . $package->gambar) }}" alt="{{ $package->nama_travel }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
+                            <img src="{{ str_starts_with($package->gambar, 'http') ? $package->gambar : asset('storage/' . ltrim(str_replace(['public/', 'storage/'], '', $package->gambar), '/')) }}" alt="{{ $package->nama_travel }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
                         @else
                             <div class="w-full h-full bg-gradient-to-br from-slate-900 via-sky-950 to-slate-900 flex flex-col items-center justify-center text-slate-400 gap-2">
                                 <span class="text-5xl">🎒</span>
