@@ -57,6 +57,13 @@ class ProfileController extends Controller
             
             // Simpan path yang benar ke database
             $user->avatar = $path;
+
+            // Dual-store copy to public_path for cPanel compatibility
+            try {
+                $publicCopy = public_path('storage/' . $path);
+                @mkdir(dirname($publicCopy), 0755, true);
+                @copy(storage_path('app/public/' . $path), $publicCopy);
+            } catch (\Throwable $e) {}
         }
 
         $user->save();

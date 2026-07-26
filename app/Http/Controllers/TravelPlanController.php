@@ -38,7 +38,15 @@ class TravelPlanController extends Controller
             if (!file_exists($dir)) {
                 @mkdir($dir, 0755, true);
             }
-            $data['foto_sampul'] = $request->file('foto_sampul')->store('travel-covers', 'public');
+            $storedPath = $request->file('foto_sampul')->store('travel-covers', 'public');
+            $data['foto_sampul'] = $storedPath;
+
+            // Dual-store copy to public_path for cPanel compatibility
+            try {
+                $publicCopy = public_path('storage/' . $storedPath);
+                @mkdir(dirname($publicCopy), 0755, true);
+                @copy(storage_path('app/public/' . $storedPath), $publicCopy);
+            } catch (\Throwable $e) {}
         }
 
         if (empty($data['status'])) {
