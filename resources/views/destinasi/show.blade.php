@@ -318,13 +318,13 @@
                     <div class="border-b border-gray-100 pb-5 last:border-0">
                         <div class="flex justify-between items-start mb-2">
                             <div class="flex items-center gap-3">
-                                @if($rating->user->avatar)
-    <img src="{{ asset('storage/' . $rating->user->avatar) }}" alt="{{ $rating->user->name }}" class="w-10 h-10 rounded-full object-cover border-2 border-sky-100 shadow-sm">
-@else
-    <div class="w-10 h-10 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-sm font-bold shadow-sm">
-        {{ strtoupper(substr($rating->user->name, 0, 1)) }}
-    </div>
-@endif
+                                @if($rating->user && $rating->user->avatar)
+                                    <img src="{{ str_starts_with($rating->user->avatar, 'http') ? $rating->user->avatar : asset('storage/' . ltrim(str_replace(['public/', 'storage/'], '', $rating->user->avatar), '/')) }}" alt="{{ $rating->user->name }}" class="w-10 h-10 rounded-full object-cover border-2 border-sky-100 shadow-sm">
+                                @else
+                                    <div class="w-10 h-10 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-sm font-bold shadow-sm">
+                                        {{ strtoupper(substr($rating->user->name, 0, 1)) }}
+                                    </div>
+                                @endif
 
 
                                 <div>
