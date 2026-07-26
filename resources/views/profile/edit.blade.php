@@ -11,7 +11,7 @@
             <!-- Header Profil dengan Avatar -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
                 @if(Auth::user()->avatar)
-                    <img src="{{ asset('storage/' . Auth::user()->avatar) }}" alt="Avatar" class="w-24 h-24 rounded-full object-cover shadow-inner border-4 border-sky-100">
+                    <img src="{{ str_starts_with(Auth::user()->avatar, 'http') ? Auth::user()->avatar : asset('storage/' . ltrim(str_replace(['public/', 'storage/'], '', Auth::user()->avatar), '/')) }}" alt="Avatar" class="w-24 h-24 rounded-full object-cover shadow-inner border-4 border-sky-100">
                 @else
                     <div class="w-24 h-24 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-4xl font-extrabold shadow-inner">
                         {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
