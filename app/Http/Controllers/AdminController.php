@@ -710,7 +710,21 @@ class AdminController extends Controller
 
     public function logs()
     {
-        $logs = AdminLog::with('user')->latest()->paginate(10)->withQueryString();
+        try {
+            if (Schema::hasTable('admin_logs')) {
+                $logs = AdminLog::with('user')->latest()->paginate(10)->withQueryString();
+            } else {
+                $logs = new LengthAwarePaginator([], 0, 10, 1, [
+                    'path' => request()->url(),
+                    'query' => request()->query(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            $logs = new LengthAwarePaginator([], 0, 10, 1, [
+                'path' => request()->url(),
+                'query' => request()->query(),
+            ]);
+        }
 
         return view('admin.logs.index', compact('logs'));
     }
