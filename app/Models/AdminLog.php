@@ -96,20 +96,29 @@ class AdminLog extends Model
         ?string $summary = null,
         array $changes = [],
         ?string $location = null
-    ): self {
-        $admin = Auth::user();
+    ): ?self {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('admin_logs')) {
+                return null;
+            }
 
-        return self::create([
-            'user_id' => $admin?->id,
-            'admin_name' => $admin ? ($admin->name ?: $admin->username) : 'Sistem Admin',
-            'action' => $action,
-            'entity_type' => $entityType,
-            'entity_id' => $entityId,
-            'entity_name' => $entityName,
-            'summary' => $summary ?: ucfirst($action) . ' ' . ($entityName ?: $entityType),
-            'changes' => $changes,
-            'location' => $location,
-            'changed_at' => now(),
-        ]);
+            $admin = Auth::user();
+
+            return self::create([
+                'user_id' => $admin?->id,
+                'admin_name' => $admin ? ($admin->name ?: $admin->username) : 'Sistem Admin',
+                'action' => $action,
+                'entity_type' => $entityType,
+                'entity_id' => $entityId,
+                'entity_name' => $entityName,
+                'summary' => $summary ?: ucfirst($action) . ' ' . ($entityName ?: $entityType),
+                'changes' => $changes,
+                'location' => $location,
+                'changed_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to record admin log: ' . $e->getMessage());
+            return null;
+        }
     }
 }
