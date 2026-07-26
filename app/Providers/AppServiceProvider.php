@@ -25,8 +25,8 @@ class AppServiceProvider extends ServiceProvider
         // Observer untuk auto-update Bayesian Average rating
         Rating::observe(RatingObserver::class);
 
-        // Paksa HTTPS di lingkungan produksi (Domainesia)
-        if ($this->app->environment('production')) {
+        // Paksa HTTPS di domain produksi (tripmate.my.id) atau saat diakses via HTTPS
+        if (str_contains(request()->header('host', ''), 'tripmate.my.id') || request()->isSecure() || request()->server('HTTP_X_FORWARDED_PROTO') === 'https') {
             URL::forceScheme('https');
         }
     }
