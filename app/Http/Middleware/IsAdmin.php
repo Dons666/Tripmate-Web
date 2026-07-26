@@ -18,9 +18,11 @@ class IsAdmin
             return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu untuk mengakses Admin Panel.');
         }
 
-        // 2. Jika sudah login tetapi role bukan admin, tampilkan akses ditolak 403
-        if (auth()->user()->role !== 'admin') {
-            abort(403, 'Akses ditolak. Halaman ini hanya dapat diakses oleh Admin.');
+        // 2. Jika sudah login tetapi role bukan admin, tampilkan akses ditolak 403 dengan detail akun
+        if (!auth()->user()->isAdmin()) {
+            $email = auth()->user()->email ?? '-';
+            $role = auth()->user()->role ?? 'kosong';
+            abort(403, "Akses ditolak. Halaman ini hanya dapat diakses oleh Admin. (Terlogin sebagai: {$email}, Role: '{$role}')");
         }
 
         return $next($request);

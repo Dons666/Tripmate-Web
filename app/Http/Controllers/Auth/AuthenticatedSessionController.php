@@ -29,11 +29,11 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         // Redirect admin to admin dashboard, travel to travel page, regular users to home
-        if (auth()->user()->role === 'admin') {
+        if (auth()->user()->isAdmin()) {
             return redirect()->intended(route('admin.dashboard', absolute: false));
         }
 
-        if (auth()->user()->role === 'travel') {
+        if (auth()->user()->isTravel()) {
             return redirect()->intended(route('travel.dashboard', absolute: false));
         }
 
