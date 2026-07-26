@@ -266,6 +266,19 @@ class TravelPlanController extends Controller
         ]);
 
         $travel = \App\Models\Travel::findOrFail($travelId);
+        $travel->load('armada');
+        
+        $totalCapacity = $travel->armada ? $travel->armada->kapasitas_kursi : 0;
+        
+        $bookedSeats = \App\Models\TravelPlan::where('travel_id', $travel->id)
+            ->where('status', '!=', 'Dibatalkan')
+            ->sum('jumlah_peserta');
+            
+        $availableSeats = max(0, $totalCapacity - $bookedSeats);
+
+        if ($request->jumlah_peserta > $availableSeats) {
+            return back()->with('error', 'Maaf, sisa kursi tidak mencukupi. Sisa kursi tersedia: ' . $availableSeats);
+        }
 
         $plan = Auth::user()->travelPlans()->create([
             'nama_perjalanan' => 'Trip ' . $travel->nama_travel,
@@ -280,5 +293,23 @@ class TravelPlanController extends Controller
 
         return redirect()->route('travel-plans.show', $plan->id)
             ->with('success', 'Paket travel berhasil dipesan! Anda langsung diarahkan ke rencana perjalanan baru.');
+    }
+
+    public function checkAvailability(\App\Models\Travel $travel)
+    {
+        $travel->load('armada');
+        
+        $totalCapacity = $travel->armada ? $travel->armada->kapasitas_kursi : 0;
+        
+        $bookedSeats = \App\Models\TravelPlan::where('travel_id', $travel->id)
+            ->where('status', '!=', 'Dibatalkan')
+            ->sum('jumlah_peserta');
+            
+        $availableSeats = max(0, $totalCapacity - $bookedSeats);
+        
+        return response()->json([
+            'available_seats' => $availableSeats,
+            'armada_name' => $travel->armada ? $travel->armada->nama_kendaraan : 'Tidak diketahui'
+        ]);
     }
 }
