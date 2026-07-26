@@ -179,7 +179,7 @@ class TravelDashboardController extends Controller
             'tanggal_keberangkatan' => 'required|date',
             'kota' => 'required|string|max:255',
             'kontak' => 'required|string|max:255',
-            'gambar' => 'nullable|image|max:2048',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:10240',
             'armada_id' => 'required|exists:armadas,id',
             'wisata_ids' => 'nullable|array',
             'wisata_ids.*' => 'exists:destinasi,id',
@@ -198,7 +198,17 @@ class TravelDashboardController extends Controller
         $travelData['rating'] = 5.0; // Default rating
 
         if ($request->hasFile('gambar')) {
-            $travelData['gambar'] = '/storage/' . $request->file('gambar')->store('travel-covers', 'public');
+            $dir = storage_path('app/public/travel-covers');
+            if (!file_exists($dir)) {
+                @mkdir($dir, 0755, true);
+            }
+            $storedPath = $request->file('gambar')->store('travel-covers', 'public');
+            $travelData['gambar'] = $storedPath;
+            try {
+                $publicCopy = public_path('storage/' . $storedPath);
+                @mkdir(dirname($publicCopy), 0755, true);
+                @copy(storage_path('app/public/' . $storedPath), $publicCopy);
+            } catch (\Throwable $e) {}
         } else {
             $travelData['gambar'] = 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80';
         }
@@ -220,8 +230,8 @@ class TravelDashboardController extends Controller
      */
     public function editPackage(Travel $travel)
     {
-        if ($travel->user_id !== Auth::id()) {
-            abort(403);
+        if ((int) $travel->user_id !== (int) Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses untuk mengedit paket perjalanan ini.');
         }
         $armadas = Auth::user()->armadas;
         $wisatas = \App\Models\Destinasi::where('tipe', 'wisata')->orderBy('nama_destinasi')->get();
@@ -235,8 +245,8 @@ class TravelDashboardController extends Controller
      */
     public function updatePackage(Request $request, Travel $travel)
     {
-        if ($travel->user_id !== Auth::id()) {
-            abort(403);
+        if ((int) $travel->user_id !== (int) Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses untuk memperbarui paket perjalanan ini.');
         }
 
         $validated = $request->validate([
@@ -247,7 +257,7 @@ class TravelDashboardController extends Controller
             'tanggal_keberangkatan' => 'required|date',
             'kota' => 'required|string|max:255',
             'kontak' => 'required|string|max:255',
-            'gambar' => 'nullable|image|max:2048',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:10240',
             'armada_id' => 'required|exists:armadas,id',
             'wisata_ids' => 'nullable|array',
             'wisata_ids.*' => 'exists:destinasi,id',
@@ -264,7 +274,17 @@ class TravelDashboardController extends Controller
         $travelData['slug'] = Str::slug($travelData['nama_travel']) . '-' . uniqid();
 
         if ($request->hasFile('gambar')) {
-            $travelData['gambar'] = '/storage/' . $request->file('gambar')->store('travel-covers', 'public');
+            $dir = storage_path('app/public/travel-covers');
+            if (!file_exists($dir)) {
+                @mkdir($dir, 0755, true);
+            }
+            $storedPath = $request->file('gambar')->store('travel-covers', 'public');
+            $travelData['gambar'] = $storedPath;
+            try {
+                $publicCopy = public_path('storage/' . $storedPath);
+                @mkdir(dirname($publicCopy), 0755, true);
+                @copy(storage_path('app/public/' . $storedPath), $publicCopy);
+            } catch (\Throwable $e) {}
         }
 
         $travel->update($travelData);
