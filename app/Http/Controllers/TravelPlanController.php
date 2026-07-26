@@ -53,7 +53,9 @@ class TravelPlanController extends Controller
         }
 
         $travelPlan->load('destinasis', 'expenses', 'schedules.destinasi');
-        return view('travel-plans.show', compact('travelPlan'));
+        $travels = \App\Models\Travel::latest()->get();
+
+        return view('travel-plans.show', compact('travelPlan', 'travels'));
     }
 
     public function attachTravel(Request $request, TravelPlan $travelPlan)
