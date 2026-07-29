@@ -14,11 +14,14 @@ use App\Http\Controllers\Api\RatingController;
 use App\Http\Controllers\Api\PreferenceController;
 use App\Http\Controllers\Api\TravelController;
 
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes
 |--------------------------------------------------------------------------
 */
+
+Route::post('/recommendation/itinerary', [RecommendationController::class, 'generateItinerary']);
 
 // Auth
 Route::prefix('auth')->group(function () {

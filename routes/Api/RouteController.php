@@ -16,3 +16,7 @@ Route::get(
 );
 
 Route::post('/integrated-route', [BudgetController::class, 'getIntegratedRoute']);
+
+use App\Http\Controllers\Api\RecommendationController;
+
+Route::post('/recommendation/itinerary', [RecommendationController::class, 'generateItinerary']);
