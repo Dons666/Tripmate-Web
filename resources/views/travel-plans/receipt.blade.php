@@ -176,6 +176,45 @@
             </div>
 
             <!-- RATING SECTION -->
+            @include('partials.ai-checking-modal')
+
+            @if(session('error') || $errors->has('review') || $errors->has('komentar'))
+                <!-- MODAL POPUP PERINGATAN MODERASI AI GEMINI -->
+                <div id="aiWarningModalReceipt" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 16px;">
+                    <div style="background: #ffffff; border-radius: 24px; max-width: 440px; width: 100%; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid #ffe4e6; text-align: center;">
+                        <div style="width: 56px; height: 56px; background: #ffe4e6; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px; color: #e11d48;">
+                            🤖⚠️
+                        </div>
+                        
+                        <h3 style="font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Peringatan Moderasi AI Gemini</h3>
+                        
+                        <div style="background: #fff1f2; border: 1px solid #fecdd3; border-radius: 16px; padding: 14px; margin-bottom: 16px; text-align: center;">
+                            <p style="font-size: 11px; font-weight: 800; color: #9f1239; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Perkataan Tidak Pantas Terdeteksi</p>
+                            <p style="font-size: 13px; font-weight: 600; color: #881337; line-height: 1.5; margin: 0;">
+                                {{ session('error') ?? $errors->first('review') ?? $errors->first('komentar') }}
+                            </p>
+                        </div>
+
+                        @if(old('review') || old('komentar'))
+                            <div style="margin-bottom: 20px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; text-align: left;">
+                                <span style="font-size: 11px; font-weight: 700; color: #64748b; display: block; margin-bottom: 4px;">Draf komentar Anda:</span>
+                                <p style="font-size: 12px; font-style: italic; color: #334155; font-family: monospace; background: #ffffff; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; margin: 0;">
+                                    "{{ old('review') ?? old('komentar') }}"
+                                </p>
+                            </div>
+                        @endif
+
+                        <p style="font-size: 12px; color: #64748b; margin-bottom: 20px; line-height: 1.5;">
+                            Mohon perbaiki isi ulasan Anda dengan kata-kata yang sopan dan tidak mengandung unsur toksisitas atau kata kasar.
+                        </p>
+
+                        <button type="button" onclick="document.getElementById('aiWarningModalReceipt').style.display='none'" style="width: 100%; padding: 12px; background: #e11d48; color: #ffffff; font-weight: 800; border-radius: 12px; font-size: 14px; border: none; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(225, 29, 72, 0.3);">
+                            ✏️ Saya Mengerti & Edit Komentar
+                        </button>
+                    </div>
+                </div>
+            @endif
+
             <div class="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 shadow-xl no-print mt-6 space-y-6">
                 <div>
                     <h3 class="text-xl font-extrabold text-slate-900">Beri Ulasan Perjalanan Anda ⭐</h3>
@@ -194,7 +233,7 @@
                                     <h4 class="font-bold text-slate-800">🚌 Agen Travel: {{ $travelPlan->travel->nama_travel }}</h4>
                                     <p class="text-xs text-slate-400">Berikan penilaian Anda terhadap pelayanan Agen Travel ini.</p>
                                 </div>
-                                <form action="{{ route('ratings.store', ['type' => 'travel', 'id' => $travelPlan->travel_id]) }}" method="POST" class="w-full sm:w-auto mt-2">
+                                <form action="{{ route('ratings.store', ['type' => 'travel', 'id' => $travelPlan->travel_id]) }}" method="POST" onsubmit="showAiCheckingModal()" class="w-full sm:w-auto mt-2">
                                     @csrf
                                     <div class="flex items-center gap-3">
                                         <!-- Star inputs -->
@@ -234,7 +273,7 @@
                                             <h4 class="font-bold text-slate-800">📍 {{ $d->nama_destinasi }} ({{ $d->kota }})</h4>
                                             <p class="text-xs text-slate-400">Berikan penilaian Anda untuk destinasi ini.</p>
                                         </div>
-                                        <form action="{{ route('ratings.store', ['type' => 'destination', 'id' => $d->id]) }}" method="POST" class="w-full sm:w-auto mt-2">
+                                        <form action="{{ route('ratings.store', ['type' => 'destination', 'id' => $d->id]) }}" method="POST" onsubmit="showAiCheckingModal()" class="w-full sm:w-auto mt-2">
                                             @csrf
                                             <div class="flex items-center gap-3">
                                                 <div class="flex gap-1" x-data="{ currentRating: {{ $destRating ? $destRating->skor_rating : 0 }}, hoverRating: 0 }">
@@ -276,7 +315,7 @@
                                             <h4 class="font-bold text-slate-800">📍 {{ $d->nama_destinasi }} ({{ $d->kota }})</h4>
                                             <p class="text-xs text-slate-400">Berikan penilaian Anda untuk destinasi ini.</p>
                                         </div>
-                                        <form action="{{ route('ratings.store', ['type' => 'destination', 'id' => $d->id]) }}" method="POST" class="w-full sm:w-auto mt-2">
+                                        <form action="{{ route('ratings.store', ['type' => 'destination', 'id' => $d->id]) }}" method="POST" onsubmit="showAiCheckingModal()" class="w-full sm:w-auto mt-2">
                                             @csrf
                                             <div class="flex items-center gap-3">
                                                 <div class="flex gap-1" x-data="{ currentRating: {{ $destRating ? $destRating->skor_rating : 0 }}, hoverRating: 0 }">

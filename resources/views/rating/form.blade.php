@@ -49,10 +49,12 @@
     </script>
 @endif
 
+@include('partials.ai-checking-modal')
+
 <div class="rating-box">
     <h3>Beri Rating Anda</h3>
 
-    <form method="POST" action="{{ route('ratings.store', ['type' => $rateableType, 'id' => $rateableId]) }}">
+    <form method="POST" action="{{ route('ratings.store', ['type' => $rateableType, 'id' => $rateableId]) }}" onsubmit="showAiCheckingModal()">
         @csrf
         <label for="rating">Rating (1-5)</label>
         <select name="rating" id="rating" required>

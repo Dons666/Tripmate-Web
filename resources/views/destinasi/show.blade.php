@@ -270,7 +270,9 @@
                     </script>
                 @endif
 
-                <form action="{{ route('destinasi.rate', $destinasi->id) }}" method="POST" class="mb-8 bg-gray-50 p-5 rounded-xl border border-gray-100" id="commentRatingForm">
+                @include('partials.ai-checking-modal')
+
+                <form action="{{ route('destinasi.rate', $destinasi->id) }}" method="POST" class="mb-8 bg-gray-50 p-5 rounded-xl border border-gray-100" id="commentRatingForm" onsubmit="showAiCheckingModal()">
                     @csrf
                     <h3 class="font-semibold text-gray-800 mb-3 text-sm">Beri Ulasanmu</h3>
                     <div class="flex flex-col md:flex-row gap-4 mb-3">
