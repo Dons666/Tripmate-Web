@@ -1,83 +1,64 @@
-<div class="section-block" style="margin-top: 16px;">
-    <div class="section-heading">
-        <div>
-            <h2>{{ $title ?? 'Kotak Notifikasi & Banding Admin' }}</h2>
-            <p>{{ $description ?? 'Pantau pengajuan banding akun dari pengguna yang dinonaktifkan.' }}</p>
+@use('Illuminate\Support\Str')
+
+<div class="section-card" style="margin-bottom: 28px;">
+    <div class="section-title">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span>📩 {{ $title ?? 'Ringkasan Notifikasi & Banding Akun' }}</span>
+            @if(($unreadNotificationCount ?? 0) > 0)
+                <span style="background: #ef4444; color: #ffffff; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 99px;">
+                    {{ $unreadNotificationCount }} Baru
+                </span>
+            @endif
         </div>
-        @if(!empty($markAllReadRoute))
-            <form action="{{ $markAllReadRoute }}" method="POST">
-                @csrf
-                <button type="submit" class="best-link">Tandai Semua Dibaca</button>
-            </form>
-        @endif
+        <div style="display: flex; align-items: center; gap: 12px;">
+            @if(!empty($markAllReadRoute) && ($unreadNotificationCount ?? 0) > 0)
+                <form action="{{ $markAllReadRoute }}" method="POST" style="display: inline;">
+                    @csrf
+                    <button type="submit" class="btn-link" style="background: none; border: none; cursor: pointer; color: #64748b; font-size: 12px; font-weight: 700;">
+                        Tandai Semua Dibaca
+                    </button>
+                </form>
+            @endif
+            <a href="{{ route('admin.appeals.index') }}" class="btn-link">Lihat Semua Banding &rarr;</a>
+        </div>
     </div>
 
-    @if(($unreadNotificationCount ?? 0) > 0)
-        <p style="margin-bottom: 12px; color: #b45309; font-weight: 700; font-size: 13px;">
-            🔔 {{ $unreadNotificationCount }} pengajuan banding belum dibaca
-        </p>
-    @endif
+    <p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+        {{ $description ?? 'Ringkasan pengajuan banding akun dari pengguna yang dinonaktifkan.' }}
+    </p>
 
     @if(!empty($notifications) && count($notifications) > 0)
-        <div class="table-scroll">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Detail Pengajuan Banding</th>
-                        <th>Status</th>
-                        <th>Waktu</th>
-                        <th>Aksi Admin</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($notifications as $notification)
-                        <tr style="{{ !empty($notification['is_unread']) ? 'background: #fffbeb;' : '' }}">
-                            <td>
-                                <div style="font-weight: 700; color: #111827; margin-bottom: 4px;">
-                                    📧 {{ $notification['user_email'] ?? $notification['user_name'] ?? '-' }}
-                                </div>
-                                <div style="font-size: 13px; color: #374151; background: #f3f4f6; padding: 8px 12px; border-radius: 8px; border: 1px solid #e5e7eb;">
-                                    "{{ $notification['reason'] ?? $notification['message'] ?? '-' }}"
-                                </div>
-                            </td>
-                            <td>
-                                @if(($notification['status'] ?? '') === 'approved')
-                                    <span class="badge" style="background: #dcfce7; color: #166534;">Disetujui</span>
-                                @elseif(($notification['status'] ?? '') === 'rejected')
-                                    <span class="badge" style="background: #fee2e2; color: #991b1b;">Ditolak</span>
-                                @else
-                                    <span class="badge" style="background: #fef3c7; color: #92400e;">Menunggu Review</span>
-                                @endif
-                            </td>
-                            <td style="font-size: 12px; color: #6b7280; white-space: nowrap;">
-                                {{ $notification['time'] ?? '-' }}
-                            </td>
-                            <td>
-                                @if(($notification['status'] ?? '') === 'pending' && !empty($notification['id']))
-                                    <div style="display: flex; gap: 6px;">
-                                        <form action="{{ route('admin.appeals.approve', $notification['id']) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="btn-status btn-activate" style="border: none; padding: 6px 10px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; background: #166534; color: #fff;">
-                                                ✓ Setujui & Aktifkan
-                                            </button>
-                                        </form>
-                                        <form action="{{ route('admin.appeals.reject', $notification['id']) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="btn-status btn-deactivate" style="border: none; padding: 6px 10px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; background: #dc2626; color: #fff;">
-                                                ✕ Tolak
-                                            </button>
-                                        </form>
-                                    </div>
-                                @else
-                                    <span style="font-size: 12px; color: #9ca3af;">Selesai</span>
-                                @endif
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            @foreach(collect($notifications)->take(4) as $notification)
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: {{ !empty($notification['is_unread']) ? '#fffbeb' : '#f8fafc' }}; border: 1px solid {{ !empty($notification['is_unread']) ? '#fef3c7' : '#e2e8f0' }}; border-radius: 12px; font-size: 13px; gap: 12px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 10px; min-width: 200px; flex: 1;">
+                        <span style="font-size: 16px;">📧</span>
+                        <div style="min-width: 0;">
+                            <div style="font-weight: 700; color: #0f172a;">
+                                {{ $notification['user_name'] ?? $notification['user_email'] ?? '-' }}
+                                <span style="font-weight: 400; color: #64748b; font-size: 12px; margin-left: 4px;">({{ $notification['user_email'] ?? '-' }})</span>
+                            </div>
+                            <div style="font-size: 12px; color: #475569; margin-top: 2px;">
+                                "{{ Str::limit($notification['reason'] ?? $notification['message'] ?? '-', 75) }}"
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+                        <span style="font-size: 12px; color: #94a3b8;">{{ $notification['time'] ?? '-' }}</span>
+                        @if(($notification['status'] ?? '') === 'approved')
+                            <span class="badge-status status-paid" style="background: #dcfce7; color: #166534;">Disetujui</span>
+                        @elseif(($notification['status'] ?? '') === 'rejected')
+                            <span class="badge-status" style="background: #fee2e2; color: #991b1b;">Ditolak</span>
+                        @else
+                            <span class="badge-status status-pending">Menunggu</span>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
         </div>
     @else
-        <div class="empty-state">{{ $emptyText ?? 'Belum ada pengajuan banding akun.' }}</div>
+        <div style="text-align: center; color: #64748b; font-size: 13px; padding: 20px 0;">
+            {{ $emptyText ?? 'Belum ada pengajuan banding akun dari pengguna.' }}
+        </div>
     @endif
 </div>
