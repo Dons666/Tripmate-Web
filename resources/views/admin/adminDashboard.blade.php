@@ -86,18 +86,6 @@
                 <div class="quick-actions">
                     <h3>⚡ Aksi Cepat Administrasi</h3>
                     <div class="action-btns">
-                        <a href="{{ route('admin.penyedia-travel.index') }}" class="action-btn">
-                            🚌 Persetujuan Mitra Travel
-                            @if($pendingTravelCount > 0)
-                                <span class="badge-count">{{ $pendingTravelCount }}</span>
-                            @endif
-                        </a>
-                        <a href="{{ route('admin.escrow.index') }}" class="action-btn">
-                            💸 Holding Escrow & Payout
-                            @if($pendingEscrowCount > 0)
-                                <span class="badge-count" style="background: #0284c7;">{{ $pendingEscrowCount }}</span>
-                            @endif
-                        </a>
                         <a href="{{ route('admin.appeals.index') }}" class="action-btn">
                             📩 Banding Akun Member
                             @if($unreadNotificationCount > 0)
@@ -115,48 +103,6 @@
 
                 <!-- Ringkasan Statistik Utama Cards -->
                 <div class="summary-grid">
-                    <!-- Escrow Holding -->
-                    <div class="summary-card card-emerald">
-                        <div class="summary-card-title">
-                            <span>💸 Escrow Holding Funds</span>
-                            <span>🔒</span>
-                        </div>
-                        <div class="summary-card-num">
-                            Rp {{ number_format($totalEscrowHolding, 0, ',', '.') }}
-                        </div>
-                        <div class="summary-card-sub">
-                            Total {{ $pendingEscrowCount }} transaksi holding tertahan
-                        </div>
-                    </div>
-
-                    <!-- Escrow Dicairkan -->
-                    <div class="summary-card card-sky">
-                        <div class="summary-card-title">
-                            <span>🚀 Escrow Dicairkan</span>
-                            <span>✅</span>
-                        </div>
-                        <div class="summary-card-num">
-                            Rp {{ number_format($totalEscrowReleased, 0, ',', '.') }}
-                        </div>
-                        <div class="summary-card-sub">
-                            Dana payout sukses diteruskan ke agen travel
-                        </div>
-                    </div>
-
-                    <!-- Mitra Travel -->
-                    <div class="summary-card card-amber">
-                        <div class="summary-card-title">
-                            <span>🚌 Mitra Travel</span>
-                            <span>📋</span>
-                        </div>
-                        <div class="summary-card-num">
-                            {{ $travelCount }} Mitra
-                        </div>
-                        <div class="summary-card-sub">
-                            <strong style="color: #b45309;">{{ $pendingTravelCount }} Pending</strong> • {{ $approvedTravelCount }} Disetujui
-                        </div>
-                    </div>
-
                     <!-- Pengguna & Member -->
                     <div class="summary-card card-rose">
                         <div class="summary-card-title">
@@ -216,90 +162,7 @@
                     'markAllReadRoute' => route('notifications.mark-all-read'),
                 ])
 
-                <!-- Section Grid: Detail Aktivitas Terbaru -->
-                <div class="section-grid">
-                    <!-- Transaksi Travel Terbaru -->
-                    <div class="section-card">
-                        <div class="section-title">
-                            <span>📋 Transaksi Escrow Terbaru</span>
-                            <a href="{{ route('admin.escrow.index') }}" class="btn-link">Lihat Semua Escrow &rarr;</a>
-                        </div>
-                        @if($recentBookings->count() > 0)
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Pengguna</th>
-                                        <th>Paket Travel</th>
-                                        <th>Total</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($recentBookings as $booking)
-                                        <tr>
-                                            <td>
-                                                <strong>{{ $booking->user->name ?? 'User' }}</strong><br>
-                                                <span style="font-size: 11px; color: #64748b;">{{ $booking->user->email ?? '-' }}</span>
-                                            </td>
-                                            <td><strong>Rp {{ number_format($booking->budget ?? 0, 0, ',', '.') }}</strong></td>
-                                            <td>
-                                                @if($booking->payment_status === 'escrow_held')
-                                                    <span class="badge-status status-paid">Escrow Held</span>
-                                                @elseif($booking->payment_status === 'payout_released')
-                                                    <span class="badge-status status-released">Released</span>
-                                                @elseif($booking->payment_status === 'pending_admin')
-                                                    <span class="badge-status status-pending">Pending Review</span>
-                                                @else
-                                                    <span class="badge-status status-pending">{{ ucfirst($booking->payment_status ?? 'unpaid') }}</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        @else
-                            <div style="text-center: center; color: #64748b; font-size: 13px; padding: 20px 0;">Belum ada transaksi pemesanan travel.</div>
-                        @endif
-                    </div>
 
-                    <!-- Permohonan Mitra Travel Pending -->
-                    <div class="section-card">
-                        <div class="section-title">
-                            <span>🚌 Mitra Travel Menunggu Review</span>
-                            <a href="{{ route('admin.penyedia-travel.index') }}" class="btn-link">Kelola Mitra &rarr;</a>
-                        </div>
-                        @if($recentPendingProviders->count() > 0)
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Nama Travel</th>
-                                        <th>Pemilik / Penanggungjawab</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($recentPendingProviders as $provider)
-                                        <tr>
-                                            <td>
-                                                <strong>{{ $provider->nama_travel }}</strong><br>
-                                                <span style="font-size: 11px; color: #64748b;">📍 {{ $provider->kota }}</span>
-                                            </td>
-                                            <td>
-                                                {{ $provider->nama_pemilik }}<br>
-                                                <span style="font-size: 11px; color: #64748b;">📱 {{ $provider->no_hp }}</span>
-                                            </td>
-                                            <td>
-                                                <a href="{{ route('admin.penyedia-travel.index') }}" class="btn-link" style="color: #0284c7;">Review Legalitas &rarr;</a>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        @else
-                            <div style="text-align: center; color: #64748b; font-size: 13px; padding: 20px 0;">Semua pendaftaran mitra travel telah diproses.</div>
-                        @endif
-                    </div>
-                </div>
 
                 <!-- 3 Tempat Terbaik -->
                 <div class="section-card">
